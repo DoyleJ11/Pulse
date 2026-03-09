@@ -11,6 +11,7 @@
     "dev": "tsx watch src/index.ts"
   },
   "dependencies": {
+    "@prisma/adapter-pg": "^7.4.2",
     "@prisma/client": "^7.4.2",
     "bcrypt": "^6.0.0",
     "cors": "^2.8.6",
