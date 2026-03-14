@@ -6,25 +6,16 @@ import express, {
 } from "express";
 import { CustomError } from "./utils/customErrors.js";
 import { router as roomRouter } from "./routes/rooms.js";
-import { PrismaClient } from "../generated/prisma/client.js";
-import { PrismaPg } from "@prisma/adapter-pg";
-import { z, ZodError } from "zod";
-import dotenv from "dotenv";
-dotenv.config({ path: ".env" });
-
-const EnvSchema = z.object({
-  DATABASE_URL: z.url(),
-  JWT_SECRET: z.string().min(32),
-  PORT: z.coerce.number().default(3001),
-});
-
-const env = EnvSchema.parse(process.env);
+import { env } from "./utils/config.js";
+import { ZodError } from "zod";
+import { Server } from "socket.io";
+import { initSocket } from "./utils/socket.js";
+import http from "node:http";
 
 const app: Application = express();
 const port = env.PORT;
-
-const adapter = new PrismaPg({ connectionString: env.DATABASE_URL });
-const prisma = new PrismaClient({ adapter });
+const httpServer = http.createServer(app);
+initSocket(httpServer);
 
 app.use(express.json());
 
@@ -55,12 +46,6 @@ app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
   }
 });
 
-app.listen(port, () => {
+httpServer.listen(port, () => {
   console.log(`Server is running on http://localhost:${port}`);
 });
-
-export type PrismaTransactionalClient = Parameters<
-  Parameters<PrismaClient["$transaction"]>[0]
->[0];
-
-export { prisma, env };
