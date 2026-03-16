@@ -1,8 +1,13 @@
+import { Routes, Route } from "react-router";
+import { LandingPage } from "./components/lobby/LandingPage";
+import { Lobby } from "./components/lobby/Lobby";
+
 function App() {
   return (
-    <div className="min-h-screen flex items-center justify-center">
-      <h1 className="text-4xl font-bold text-blue">Pulse</h1>
-    </div>
+    <Routes>
+      <Route path="/" element={<LandingPage />} />
+      <Route path="/lobby/:code" element={<Lobby />} />
+    </Routes>
   );
 }
 
