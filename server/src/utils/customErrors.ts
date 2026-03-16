@@ -7,13 +7,6 @@ export class CustomError extends Error {
   }
 }
 
-export class JWTError extends CustomError {
-  constructor(message: string) {
-    super(message, 500);
-    this.name = "JWT_Error";
-  }
-}
-
 export class RoomError extends CustomError {
   public roomCode?: string;
   public action?: string;
@@ -22,12 +15,5 @@ export class RoomError extends CustomError {
     this.name = "RoomError";
     this.roomCode = roomCode;
     this.action = action;
-  }
-}
-
-export class CreateUserError extends CustomError {
-  constructor(message: string) {
-    super(message, 404);
-    this.name = "CreateUserError";
   }
 }

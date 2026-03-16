@@ -1,9 +1,9 @@
 import { nanoid } from "nanoid";
-import { prisma } from "../index.js";
+import { prisma } from "../utils/prisma.js";
+import type { PrismaTransactionalClient } from "../utils/prisma.js";
 import crypto from "crypto";
 import { generateToken } from "../utils/authUtils.js";
 import type { Room } from "../../generated/prisma/client.js";
-import type { PrismaTransactionalClient } from "../index.js";
 import { RoomError } from "../utils/customErrors.js";
 
 async function createRoom(name: string) {

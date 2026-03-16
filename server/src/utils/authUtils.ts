@@ -1,5 +1,4 @@
-import { JWTError } from "./customErrors.js";
-import { env } from "../index.js";
+import { env } from "./config.js";
 import jwt from "jsonwebtoken";
 
 interface Payload {

@@ -1,24 +1,13 @@
-import { useEffect } from "react";
+import { Routes, Route } from "react-router";
+import { LandingPage } from "./components/lobby/LandingPage";
+import { Lobby } from "./components/lobby/Lobby";
 
 function App() {
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const response = await fetch("/api/health");
-        const result = await response.json();
-        console.log(result);
-      } catch (error) {
-        console.error("Error fetching data:", error);
-      }
-    };
-
-    fetchData();
-  }, []);
-
   return (
-    <div className="min-h-screen flex items-center justify-center">
-      <h1 className="text-4xl font-bold text-blue-600">Pulse</h1>
-    </div>
+    <Routes>
+      <Route path="/" element={<LandingPage />} />
+      <Route path="/lobby/:code" element={<Lobby />} />
+    </Routes>
   );
 }
 
