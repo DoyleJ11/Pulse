@@ -12,8 +12,10 @@ function registerRoomEvents(io: Server, socket: Socket) {
       socket.data.userId = data.id;
       socket.data.code = data.code;
 
-      if (disconnectMap.get(socket.data.userId)) {
-        clearTimeout(disconnectMap.get(socket.data.userId));
+      const wasDisconnected = disconnectMap.get(socket.data.userId);
+
+      if (wasDisconnected) {
+        clearTimeout(wasDisconnected);
       }
 
       socket.join(data.code);
@@ -21,7 +23,7 @@ function registerRoomEvents(io: Server, socket: Socket) {
       io.to(data.code).emit("roomState", users);
     } catch (err) {
       console.error("Failed to join room", err);
-      //   throw new Error(`Could not join room`);
+      socket.emit("error", { message: "Could not join room" });
     }
   });
 
@@ -32,9 +34,13 @@ function registerRoomEvents(io: Server, socket: Socket) {
       if (!code) return;
 
       const timerId: NodeJS.Timeout = setTimeout(async () => {
-        await removeUser(userId);
-        const users = await getAllUsers(code);
-        io.to(code).emit("roomState", users);
+        try {
+          await removeUser(userId);
+          const users = await getAllUsers(code);
+          io.to(code).emit("roomState", users);
+        } catch (err) {
+          console.error("Failed to remove user", err);
+        }
       }, 15000);
 
       disconnectMap.set(userId, timerId);
@@ -43,7 +49,7 @@ function registerRoomEvents(io: Server, socket: Socket) {
       io.to(code).emit("roomState", users);
     } catch (err) {
       console.error("Failed to remove user", err);
-      //   throw new Error(`Could not remove user`);
+      socket.emit("error", { message: "Could not disconnect" });
     }
   });
 }

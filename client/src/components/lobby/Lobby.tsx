@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useAuthStore } from "../../stores/authStore";
 import { useRoomStore } from "../../stores/roomStore";
 import { socket } from "../../utils/socket";
@@ -11,6 +11,7 @@ function Lobby() {
   const playerList = useRoomStore((state) => state.players);
   const setPlayerList = useRoomStore((state) => state.setPlayers);
   const lobbyCode = useRoomStore((state) => state.code);
+  const [errorMessage, setErrorMessage] = useState("");
 
   useEffect(() => {
     if (lobbyCode && name && !socket.connected) {
@@ -30,14 +31,22 @@ function Lobby() {
       setPlayerList(data);
     });
 
+    socket.on("error", (errData) => {
+      setErrorMessage(errData.message);
+    });
+
     return () => {
       socket.off("roomState");
+      socket.off("error");
     };
   }, [setPlayerList]);
 
   return (
     <div>
       <div className="h-screen flex flex-col justify-center items-center gap-4">
+        {errorMessage && (
+          <h1 className="text-2xl font-bold text-red-400">{errorMessage}</h1>
+        )}
         <h1 className="text-3xl font-bold text-slate-600">{lobbyCode}</h1>
         <h1 className="text-3xl font-bold text-slate-600">{name}</h1>
         <h1 className="text-2xl font-bold text-slate-500">{role}</h1>
