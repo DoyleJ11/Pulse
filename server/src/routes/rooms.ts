@@ -16,8 +16,9 @@ router.post("/", async (req, res) => {
   const name = NameSchema.parse(req.body.name);
   const { room, host, token } = await createRoom(name);
   const response = {
+    id: host.id,
     code: room.code,
-    username: host.name,
+    name: host.name,
     role: host.role,
     jwt: token,
   };
@@ -30,8 +31,9 @@ router.post("/:code/join", async (req, res) => {
   const code = CodeSchema.parse(req.params.code);
   const { room, user, token } = await joinRoom(name, code);
   const response = {
+    id: user.id,
     code: room.code,
-    username: user.name,
+    name: user.name,
     role: user.role,
     jwt: token,
   };

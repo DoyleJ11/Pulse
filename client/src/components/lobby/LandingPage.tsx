@@ -1,4 +1,4 @@
-import { type SubmitEvent, useState } from "react";
+import { useState } from "react";
 import { createRoom, joinRoom } from "../../services/api";
 import { useNavigate } from "react-router";
 import { useAuthStore } from "../../stores/authStore";
@@ -12,22 +12,32 @@ function LandingPage() {
   const [name, setName] = useState("");
   const [code, setCode] = useState("");
 
-  const handleCreate = async (e: SubmitEvent<HTMLFormElement>) => {
+  const handleCreate = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const response = await createRoom(name);
-    setAuth(response.jwt, response.username, response.role);
+    setAuth(response.jwt, response.name, response.role, response.id);
     setRoomCode(response.code);
+    socket.connect();
+    socket.emit("joinRoom", {
+      id: response.id,
+      code: response.code,
+      name: response.name,
+      token: response.jwt,
+      role: response.role,
+    });
     navigate(`/lobby/${response.code}`);
   };
 
-  const handleJoin = async (e: SubmitEvent<HTMLFormElement>) => {
+  const handleJoin = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const response = await joinRoom(name, code);
-    setAuth(response.jwt, response.username, response.role);
+    setAuth(response.jwt, response.name, response.role, response.id);
     setRoomCode(response.code);
+    socket.connect();
     socket.emit("joinRoom", {
+      id: response.id,
       code: response.code,
-      username: response.username,
+      name: response.name,
       token: response.jwt,
       role: response.role,
     });

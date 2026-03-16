@@ -1,35 +1,51 @@
 import { create } from "zustand";
+import { persist, createJSONStorage } from "zustand/middleware";
 
 interface AuthState {
   token: string;
-  username: string;
+  name: string;
   role: string;
-  userId?: string;
+  userId: string;
   setAuth: (
     newToken: string,
-    newUsername: string,
+    newName: string,
     newRole: string,
-    newUserId?: string,
+    newUserId: string,
   ) => void;
 }
 
-const useAuthStore = create<AuthState>((set) => ({
-  token: "",
-  username: "",
-  role: "",
+const useAuthStore = create<AuthState>()(
+  persist(
+    (set) => ({
+      token: "",
+      name: "",
+      role: "",
+      userId: "",
 
-  setAuth: (
-    newToken: string,
-    newUsername: string,
-    newRole: string,
-    newUserId?: string,
-  ) =>
-    set({
-      token: newToken,
-      username: newUsername,
-      role: newRole,
-      userId: newUserId,
+      setAuth: (
+        newToken: string,
+        newName: string,
+        newRole: string,
+        newUserId: string,
+      ) =>
+        set({
+          token: newToken,
+          name: newName,
+          role: newRole,
+          userId: newUserId,
+        }),
     }),
-}));
+    {
+      name: "auth-storage",
+      storage: createJSONStorage(() => sessionStorage),
+      partialize: (state) => ({
+        token: state.token,
+        name: state.name,
+        role: state.role,
+        userId: state.userId,
+      }),
+    },
+  ),
+);
 
 export { useAuthStore };

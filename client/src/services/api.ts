@@ -1,8 +1,9 @@
 import { z } from "zod";
 
 const RoomSchema = z.object({
+  id: z.string(),
   code: z.string(),
-  username: z.string(),
+  name: z.string(),
   role: z.string(),
   jwt: z.string(),
 });

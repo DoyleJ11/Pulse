@@ -8,7 +8,6 @@ import { CustomError } from "./utils/customErrors.js";
 import { router as roomRouter } from "./routes/rooms.js";
 import { env } from "./utils/config.js";
 import { ZodError } from "zod";
-import { Server } from "socket.io";
 import { initSocket } from "./utils/socket.js";
 import http from "node:http";
 
