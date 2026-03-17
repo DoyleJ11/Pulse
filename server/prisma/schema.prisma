@@ -38,12 +38,13 @@ model Song {
   id String @id @default(cuid())
   playerId String
   player Player @relation(fields: [playerId], references: [id])
-  spotifyId String
+  deezerId String
   title String
   artist String
   albumArt String // URL
   previewUrl String? // 30s clip, nullable
   seed Int // 1-8, for bracket positioning
+  provider String @default("deezer")
  }
 
 model Bracket {
@@ -52,7 +53,7 @@ model Bracket {
   room Room @relation(fields: [roomId], references: [id])
   // Store the full bracket state as JSON
   // Array of 31 slots (indicies 0-30 for a 16 song bracket)
-  // Each slot: { songId, spotifyId, title, artist, albumArt, previewUrl, submittedBy } | null
+  // Each slot: { songId, deezerId, title, artist, albumArt, previewUrl, submittedBy } | null
   state Json
   currentMatchup Int @default(0) // Index of current matchup being judged
 }
