@@ -1,4 +1,4 @@
-import { trackSearch } from "../services/musicService.js";
+import { trackSearch, type DeezerTrack } from "../services/musicService.js";
 import express from "express";
 import { z } from "zod";
 

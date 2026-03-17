@@ -4,7 +4,6 @@ const DeezerTrackSchema = z.object({
   id: z.number(),
   title: z.string(),
   title_short: z.string(),
-  isrc: z.string(),
   duration: z.number(),
   preview: z.string(),
   artist: z.object({
@@ -29,6 +28,9 @@ const DeezerSearchResultSchema = z.object({
   next: z.string().optional(),
 });
 
+type DeezerSearchResults = z.infer<typeof DeezerSearchResultSchema>;
+type DeezerTrack = z.infer<typeof DeezerTrackSchema>;
+
 async function trackSearch(query: string) {
   try {
     const response = await fetch(
@@ -39,12 +41,14 @@ async function trackSearch(query: string) {
       throw new Error(`Error searching Deezer tracks`);
     }
 
-    const data = DeezerSearchResultSchema.parse(await response.json());
-    return data.data;
+    const data: DeezerSearchResults = DeezerSearchResultSchema.parse(
+      await response.json(),
+    );
+    const tracks: DeezerTrack[] = data.data;
+    return tracks;
   } catch (error) {
     console.error("Failed to fetch from Deezer API:", error);
-    return [];
   }
 }
 
-export { trackSearch };
+export { trackSearch, type DeezerTrack };
