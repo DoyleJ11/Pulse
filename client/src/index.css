@@ -1,1 +1,33 @@
 @import "tailwindcss";
+
+@theme {
+  /* Background layers — darkest to lightest */
+  --color-surface-base: #0a0a0b;
+  --color-surface-raised: #141417;
+  --color-surface-overlay: #1c1c21;
+  --color-surface-hover: #2c2c34;
+
+  /* Borders & dividers */
+  --color-border-subtle: #2a2a32;
+  --color-border-default: #3a3a44;
+
+  /* Text hierarchy */
+  --color-text-primary: #e8e8ed;
+  --color-text-secondary: #8b8b96;
+  --color-text-muted: #5c5c66;
+
+  /* Accent — used sparingly for interactive elements */
+  --color-accent: #6c5ce7;
+  --color-accent-hover: #7c6ef7;
+  --color-accent-soft: rgba(108, 92, 231, 0.12);
+}
+
+body {
+  background-color: var(--color-surface-base);
+  color: var(--color-text-primary);
+  font-family:
+    "Inter",
+    system-ui,
+    -apple-system,
+    sans-serif;
+}
