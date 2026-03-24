@@ -1,12 +1,6 @@
 import { env } from "./config.js";
 import jwt from "jsonwebtoken";
-
-interface Payload {
-  userId: string;
-  name: string;
-  role: string;
-  roomId: string;
-}
+import { type Payload } from "../middleware/auth.js";
 
 function generateToken(payload: Payload) {
   const secret = env.JWT_SECRET;

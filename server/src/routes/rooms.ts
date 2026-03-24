@@ -1,6 +1,8 @@
-import { createRoom, joinRoom } from "../services/roomService.js";
+import { createRoom, joinRoom, submitPicks } from "../services/roomService.js";
 import express from "express";
 import { z } from "zod";
+import { authMiddleware } from "../middleware/auth.js";
+import { asyncHandler } from "../utils/errorHandler.js"
 
 const router = express.Router();
 
@@ -12,7 +14,18 @@ const NameSchema = z
 
 const CodeSchema = z.string().trim().min(6, "Code must be 6 characters").max(6);
 
-router.post("/", async (req, res) => {
+const SongSchema = z.object({
+  id: z.string(),
+  title: z.string(),
+  artist: z.string(),
+  album_art: z.string(),
+  preview: z.string(),
+});
+export type Song = z.infer<typeof SongSchema>;
+
+const SubmissionSchema = z.array(SongSchema).length(8, { message: "Must submit exactly 8 songs."})
+
+router.post("/", asyncHandler(async (req, res) => {
   const name = NameSchema.parse(req.body.name);
   const { room, host, token } = await createRoom(name);
   const response = {
@@ -24,9 +37,9 @@ router.post("/", async (req, res) => {
   };
 
   res.json(response);
-});
+}));
 
-router.post("/:code/join", async (req, res) => {
+router.post("/:code/join", asyncHandler(async (req, res) => {
   const name = NameSchema.parse(req.body.name);
   const code = CodeSchema.parse(req.params.code);
   const { room, user, token } = await joinRoom(name, code);
@@ -38,6 +51,14 @@ router.post("/:code/join", async (req, res) => {
     jwt: token,
   };
   res.json(response);
-});
+}));
+
+router.post("/:code/picks", authMiddleware, asyncHandler(async (req, res) => {
+  const songs = SubmissionSchema.parse(req.body.songs);
+  const payload = req.user
+  const code = CodeSchema.parse(req.params.code)
+  const newSongs = await submitPicks(songs, payload, code);
+  res.json(newSongs);
+}));
 
 export { router };

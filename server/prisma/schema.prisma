@@ -14,46 +14,46 @@ datasource db {
 }
 
 model Room {
-  id  String @id @default(cuid())
-  code String @unique // 6 character join code
-  hostId String
-  mode String @default("favorites") // "favorites" || "theme"
+  id        String   @id @default(cuid())
+  code      String   @unique // 6 character join code
+  hostId    String
+  mode      String   @default("favorites") // "favorites" || "theme"
   themeWord String? // null for favorites mode
-  status String @default("lobby") // lobby | picking | battling | complete
+  status    String   @default("lobby") // lobby | picking | battling | complete
   createdAt DateTime @default(now())
-  players Player[]
-  bracket Bracket?
+  players   Player[]
+  bracket   Bracket?
 }
 
 model Player {
-  id String @id @default(cuid())
+  id     String @id @default(cuid())
   roomId String
-  room Room @relation(fields: [roomId], references: [id])
-  name String
-  role String // player_a || player_b || judge || spectator
-  songs Song[]
+  room   Room   @relation(fields: [roomId], references: [id])
+  name   String
+  role   String // player_a || player_b || judge || spectator
+  songs  Song[]
 }
 
 model Song {
-  id String @id @default(cuid())
-  playerId String
-  player Player @relation(fields: [playerId], references: [id])
-  deezerId String
-  title String
-  artist String
-  albumArt String // URL
+  id         String  @id @default(cuid())
+  playerId   String
+  player     Player  @relation(fields: [playerId], references: [id])
+  deezerId   String
+  title      String
+  artist     String
+  albumArt   String // URL
   previewUrl String? // 30s clip, nullable
-  seed Int // 1-8, for bracket positioning
-  provider String @default("deezer")
- }
+  seed       Int? // 1-8, for bracket positioning
+  provider   String  @default("deezer")
+}
 
 model Bracket {
-  id String @id @default(cuid())
-  roomId String @unique
-  room Room @relation(fields: [roomId], references: [id])
+  id             String @id @default(cuid())
+  roomId         String @unique
+  room           Room   @relation(fields: [roomId], references: [id])
   // Store the full bracket state as JSON
   // Array of 31 slots (indicies 0-30 for a 16 song bracket)
   // Each slot: { songId, deezerId, title, artist, albumArt, previewUrl, submittedBy } | null
-  state Json
-  currentMatchup Int @default(0) // Index of current matchup being judged
+  state          Json
+  currentMatchup Int    @default(0) // Index of current matchup being judged
 }

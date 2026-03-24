@@ -5,7 +5,6 @@ import { type Song } from "../../services/api";
 import { useEffect, useState } from "react";
 import {
   faMagnifyingGlass,
-  faPlus,
   faPlay,
 } from "@fortawesome/free-solid-svg-icons";
 

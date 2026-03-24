@@ -5,6 +5,8 @@ import crypto from "crypto";
 import { generateToken } from "../utils/authUtils.js";
 import type { Room } from "../../generated/prisma/client.js";
 import { RoomError } from "../utils/customErrors.js";
+import { type Song } from "../routes/rooms.js";
+import type { Payload } from "../middleware/auth.js";
 
 async function createRoom(name: string) {
   const roomCode = generateCode();
@@ -78,6 +80,56 @@ async function joinRoom(name: string, code: string) {
   return result;
 }
 
+async function submitPicks(songs: Song[], user: Payload, code: string) {
+  // Zod already verified the shape & size of array for us.
+  const room = await prisma.room.findUnique({
+    where: { id: user?.roomId },
+  });
+  if (!room) {
+    throw new RoomError(`Cannot find room with id: ${user.roomId}`, code, "picking");
+  }
+  if (room.status !== "picking") {
+    throw new RoomError(`Cannot submit songs to a room outside of picking phase`, room.code, "picking");
+  }
+  if (room.code !== code) {
+    throw new RoomError(`Provided code does not match user's room code: ${code}`, code, "picking");
+  }
+
+  const player = await prisma.player.findUnique({
+    where: { id: user.userId },
+    include: {
+      songs: true,
+    }
+  })
+  if (!player) {
+    throw new Error(`Could not find player with id ${user.userId}`)
+  }
+  if (player.songs && player.songs.length !== 0) {
+    throw new Error('User already submitted songs.')
+  }
+  if (player.role !== "player_a" && player.role !== "player_b") {
+    throw new Error(`Only players can submit songs.`)
+  }
+
+  const createPromises = songs.map(song => 
+    prisma.song.create({
+      data: {
+        playerId: user.userId,
+        deezerId: song.id,
+        title: song.title,
+        artist: song.artist,
+        albumArt: song.album_art,
+        previewUrl: song.preview,
+        seed: null,
+      },
+    })
+  )
+
+  const newSongs = await prisma.$transaction(createPromises);
+  return newSongs;
+}
+
+
 async function determineRole(room: Room, tx: PrismaTransactionalClient) {
   const players = await tx.player.findMany({
     where: { roomId: room.id },
@@ -99,4 +151,4 @@ function generateCode() {
   return nanoid(6);
 }
 
-export { createRoom, joinRoom };
+export { createRoom, joinRoom, submitPicks };
