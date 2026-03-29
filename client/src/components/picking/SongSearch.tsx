@@ -1,15 +1,18 @@
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { searchSong } from "../../services/api";
 import { useDebounce } from "../../hooks/useDebounce";
-import { type Song } from "../../services/api";
+import { type DeezerSong } from "../../services/api";
+import { type SongSelection } from "../../types/sharedTypes";
 import { useEffect, useState } from "react";
+import { useSongStore } from "../../stores/songStore";
 import {
   faMagnifyingGlass,
   faPlay,
 } from "@fortawesome/free-solid-svg-icons";
 
 function SongSearch() {
-  const [results, setResults] = useState<Song[]>([]);
+  const addSong = useSongStore((state) => state.addSong)
+  const [results, setResults] = useState<DeezerSong[]>([]);
   const [query, setQuery] = useState("");
   const debouncedQuery = useDebounce(query, 300);
 
@@ -17,7 +20,7 @@ function SongSearch() {
     if (debouncedQuery) {
       (async () => {
         console.log("Fetching results for:", debouncedQuery);
-        const searchResults: Song[] = await searchSong(debouncedQuery);
+        const searchResults: DeezerSong[] = await searchSong(debouncedQuery);
         setResults(searchResults);
       })();
     }
@@ -32,6 +35,19 @@ function SongSearch() {
 
     return `${formattedMinutes}:${formattedSeconds}`;
   };
+
+  const selectSong = (result: DeezerSong) => {
+    // Transform deezer song -> Song format
+    const song: SongSelection = {
+      deezerId: result.id,
+      title: result.title,
+      artist: result.artist.name,
+      albumArt: result.album.cover_medium,
+      preview: result.preview,
+    }
+
+    addSong(song)
+  }
 
   return (
     <div className="w-full max-w-xl">
@@ -76,6 +92,7 @@ function SongSearch() {
                 <button
                   type="button"
                   className="w-full flex items-center gap-3 px-5 py-2.5 hover:bg-surface-hover transition-colors text-left cursor-pointer group"
+                  onClick={() => {selectSong(result) }}
                 >
                   {/* Album art with play overlay */}
                   <div className="relative w-10 h-10 rounded-md bg-surface-overlay shrink-0 overflow-hidden group/art">

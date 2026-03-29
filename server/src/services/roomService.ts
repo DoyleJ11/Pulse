@@ -80,6 +80,39 @@ async function joinRoom(name: string, code: string) {
   return result;
 }
 
+async function setToPicking(code: string, user: Payload) {
+  const room = await prisma.room.findUnique({
+    where: { id: user?.roomId },
+    include: {
+      players: {
+        omit: { roomId: true },
+      },
+    }
+  });
+  if (!room) {
+    throw new RoomError(`Cannot find room with id: ${user.roomId}`, code, "lobby");
+  }
+  if (room.status !== "lobby") {
+    throw new RoomError(`Must be in the lobby phase to start picking`, room.code, "lobby")
+  }
+  if (room.code !== code) {
+    throw new RoomError(`Provided code does not match user's room code: ${code}`, code, "lobby");
+  }
+  if (room.hostId !== user.userId) {
+    throw new RoomError(`Room hostId does not match user's ID`, code, "lobby");
+  }
+  if (room.players.length < 3) {
+    throw new RoomError(`Must have at least two players & one judge to start picking`, room.code, "lobby")
+  }
+
+  const updatedRoom = await prisma.room.update({
+    where: {code: code},
+    data: {status: "picking"}
+  });
+
+  return updatedRoom;
+}
+
 async function submitPicks(songs: Song[], user: Payload, code: string) {
   // Zod already verified the shape & size of array for us.
   const room = await prisma.room.findUnique({
@@ -126,7 +159,29 @@ async function submitPicks(songs: Song[], user: Payload, code: string) {
   )
 
   const newSongs = await prisma.$transaction(createPromises);
-  return newSongs;
+  const bothPlayersReady = await checkPlayersSubmitted(user.roomId)
+
+  return { newSongs, bothPlayersReady };
+}
+
+async function checkPlayersSubmitted(roomId: string) {
+  // Get all players in given room, including songs.
+  const players = await prisma.player.findMany({
+    where: { roomId: roomId, OR: [{role: "player_a"}, {role: "player_b"}] },
+    include: {songs: true}
+  })
+
+  if (players.length === 0) {
+    throw new Error(`No players were found in room ${roomId}`)
+  }
+
+  if (players.length !== 2) {
+    throw new Error(`There must be 2 players before submitting.`)
+  }
+
+  const allSubmitted = players.every((player) => player.songs.length > 0)
+
+  return allSubmitted;
 }
 
 
@@ -151,4 +206,4 @@ function generateCode() {
   return nanoid(6);
 }
 
-export { createRoom, joinRoom, submitPicks };
+export { createRoom, joinRoom, submitPicks, setToPicking };

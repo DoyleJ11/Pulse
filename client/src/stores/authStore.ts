@@ -1,15 +1,16 @@
 import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
+import { type Role } from "../types/sharedTypes";
 
 interface AuthState {
   token: string;
   name: string;
-  role: string;
+  role: Role;
   userId: string;
   setAuth: (
     newToken: string,
     newName: string,
-    newRole: string,
+    newRole: Role,
     newUserId: string,
   ) => void;
 }
@@ -19,13 +20,13 @@ const useAuthStore = create<AuthState>()(
     (set) => ({
       token: "",
       name: "",
-      role: "",
+      role: null,
       userId: "",
 
       setAuth: (
         newToken: string,
         newName: string,
-        newRole: string,
+        newRole: Role,
         newUserId: string,
       ) =>
         set({

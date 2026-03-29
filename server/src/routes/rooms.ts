@@ -1,8 +1,9 @@
-import { createRoom, joinRoom, submitPicks } from "../services/roomService.js";
+import { createRoom, joinRoom, submitPicks, setToPicking } from "../services/roomService.js";
 import express from "express";
 import { z } from "zod";
 import { authMiddleware } from "../middleware/auth.js";
 import { asyncHandler } from "../utils/errorHandler.js"
+import { submissionComplete, startPicking } from "../sockets/roomEvents.js";
 
 const router = express.Router();
 
@@ -53,11 +54,29 @@ router.post("/:code/join", asyncHandler(async (req, res) => {
   res.json(response);
 }));
 
+router.post("/:code/startPicking", authMiddleware, asyncHandler(async (req, res) => {
+  const code = CodeSchema.parse(req.params.code);
+  const payload = req.user
+  const updatedRoom = await setToPicking(code, payload);
+
+  const response = {
+    status: updatedRoom.status
+  }
+
+  startPicking(code, updatedRoom.status)  
+  res.json(response);
+}))
+
 router.post("/:code/picks", authMiddleware, asyncHandler(async (req, res) => {
   const songs = SubmissionSchema.parse(req.body.songs);
   const payload = req.user
   const code = CodeSchema.parse(req.params.code)
-  const newSongs = await submitPicks(songs, payload, code);
+  const {newSongs, bothPlayersReady} = await submitPicks(songs, payload, code);
+
+  if (bothPlayersReady) {
+    submissionComplete(code)
+  }
+
   res.json(newSongs);
 }));
 
