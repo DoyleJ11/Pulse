@@ -1,0 +1,2 @@
+-- AlterTable
+ALTER TABLE "Song" ALTER COLUMN "seed" DROP NOT NULL;

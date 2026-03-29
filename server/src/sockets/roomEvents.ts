@@ -1,5 +1,6 @@
 import type { Server, Socket } from "socket.io";
 import { getAllUsers, removeUser } from "../utils/dbUtils.js";
+import { getIo } from "../utils/socket.js";
 
 const disconnectMap: Map<string, NodeJS.Timeout> = new Map<
   string,
@@ -20,7 +21,7 @@ function registerRoomEvents(io: Server, socket: Socket) {
 
       socket.join(data.code);
       const users = await getAllUsers(data.code);
-      io.to(data.code).emit("roomState", users);
+      io.to(data.code).emit("roomState", { users: users.players, hostId: users.hostId });
     } catch (err) {
       console.error("Failed to join room", err);
       socket.emit("error", { message: "Could not join room" });
@@ -37,7 +38,7 @@ function registerRoomEvents(io: Server, socket: Socket) {
         try {
           await removeUser(userId);
           const users = await getAllUsers(code);
-          io.to(code).emit("roomState", users);
+          io.to(code).emit("roomState", { users: users.players, hostId: users.hostId });
         } catch (err) {
           console.error("Failed to remove user", err);
         }
@@ -46,7 +47,7 @@ function registerRoomEvents(io: Server, socket: Socket) {
       disconnectMap.set(userId, timerId);
 
       const users = await getAllUsers(code);
-      io.to(code).emit("roomState", users);
+      io.to(code).emit("roomState", { users: users.players, hostId: users.hostId });
     } catch (err) {
       console.error("Failed to remove user", err);
       socket.emit("error", { message: "Could not disconnect" });
@@ -54,4 +55,22 @@ function registerRoomEvents(io: Server, socket: Socket) {
   });
 }
 
-export { registerRoomEvents };
+function submissionComplete(code: string) {
+  try {
+    const io = getIo()
+    io.to(code).emit("submissionComplete")
+  } catch (err) {
+    console.error("Failed to emit submission event")
+  }
+}
+
+function startPicking(code: string, status: string) {
+  try {
+    const io = getIo()
+    io.to(code).emit("startPicking", { status })
+  } catch (err) {
+    console.error("Failed to emit startPicking event")
+  }
+}
+
+export { registerRoomEvents, submissionComplete, startPicking };
