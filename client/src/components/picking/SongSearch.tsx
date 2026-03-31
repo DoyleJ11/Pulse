@@ -5,13 +5,10 @@ import { type DeezerSong } from "../../services/api";
 import { type SongSelection } from "../../types/sharedTypes";
 import { useEffect, useState } from "react";
 import { useSongStore } from "../../stores/songStore";
-import {
-  faMagnifyingGlass,
-  faPlay,
-} from "@fortawesome/free-solid-svg-icons";
+import { faMagnifyingGlass, faPlay } from "@fortawesome/free-solid-svg-icons";
 
 function SongSearch() {
-  const addSong = useSongStore((state) => state.addSong)
+  const addSong = useSongStore((state) => state.addSong);
   const [results, setResults] = useState<DeezerSong[]>([]);
   const [query, setQuery] = useState("");
   const debouncedQuery = useDebounce(query, 300);
@@ -44,10 +41,10 @@ function SongSearch() {
       artist: result.artist.name,
       albumArt: result.album.cover_medium,
       preview: result.preview,
-    }
+    };
 
-    addSong(song)
-  }
+    addSong(song);
+  };
 
   return (
     <div className="w-full max-w-xl">
@@ -68,17 +65,6 @@ function SongSearch() {
             className="flex-1 bg-transparent text-text-primary placeholder-text-muted text-sm outline-none"
             onChange={(e) => setQuery(e.target.value)}
           />
-
-          {/* Action buttons — sit inside the search bar visually */}
-          {/* <div className="flex items-center gap-1 shrink-0">
-            <button
-              type="button"
-              className="flex items-center justify-center w-8 h-8 rounded-lg text-text-secondary hover:text-accent hover:bg-accent-soft transition-colors cursor-pointer"
-              aria-label="Add song"
-            >
-              <FontAwesomeIcon icon={faPlus} className="text-sm" />
-            </button>
-          </div> */}
         </div>
 
         {/* ── Results list ── */}
@@ -92,7 +78,9 @@ function SongSearch() {
                 <button
                   type="button"
                   className="w-full flex items-center gap-3 px-5 py-2.5 hover:bg-surface-hover transition-colors text-left cursor-pointer group"
-                  onClick={() => {selectSong(result) }}
+                  onClick={() => {
+                    selectSong(result);
+                  }}
                 >
                   {/* Album art with play overlay */}
                   <div className="relative w-10 h-10 rounded-md bg-surface-overlay shrink-0 overflow-hidden group/art">

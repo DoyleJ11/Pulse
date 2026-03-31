@@ -1,33 +1,135 @@
 @import "tailwindcss";
 
 @theme {
-  /* Background layers — darkest to lightest */
-  --color-surface-base: #0a0a0b;
-  --color-surface-raised: #141417;
-  --color-surface-overlay: #1c1c21;
-  --color-surface-hover: #2c2c34;
+  /* ═══════════════════════════════════════════
+     PULSE DESIGN SYSTEM
+     Warm, bold, party-game aesthetic.
+     Every color, spacing, and radius token used
+     across the app lives here. Change it once,
+     it changes everywhere.
+     ═══════════════════════════════════════════ */
 
-  /* Borders & dividers */
-  --color-border-subtle: #2a2a32;
-  --color-border-default: #3a3a44;
+  /* ── Page backgrounds ──
+     cream:      the base page color (warm off-white)
+     card:       white cards that sit on top of cream
+     These replace the old dark-mode surface-* tokens. */
+  --color-bg-cream: #FAF7F2;
+  --color-bg-card: #FFF9F0;
 
-  /* Text hierarchy */
-  --color-text-primary: #e8e8ed;
-  --color-text-secondary: #8b8b96;
-  --color-text-muted: #5c5c66;
+  /* ── Section colors (color blocking) ──
+     These are the bold background fills for major UI panels.
+     Each panel "owns" a color — search is coral, picks is golden, etc.
+     The -deep variant is for progress bar fills and hover states. */
+  --color-section-coral: #FF7B6B;
+  --color-section-coral-deep: #FF6B58;
+  --color-section-golden: #FFD952;
+  --color-section-golden-deep: #F5C842;
+  --color-section-teal: #2DD4BF;
+  --color-section-teal-deep: #14B8A6;
+  --color-section-lavender: #C4B5FD;
+  --color-section-lavender-deep: #A78BFA;
+  --color-section-mint: #6EE7B7;
+  --color-section-mint-deep: #34D399;
 
-  /* Accent — used sparingly for interactive elements */
-  --color-accent: #6c5ce7;
-  --color-accent-hover: #7c6ef7;
-  --color-accent-soft: rgba(108, 92, 231, 0.12);
+  /* ── Text ──
+     On this light theme, text is black at various opacities.
+     Using named tokens instead of text-black/70 everywhere means
+     we can tune the hierarchy from one place. */
+  --color-text-primary: #0A0A0A;
+  --color-text-secondary: rgba(0, 0, 0, 0.7);
+  --color-text-muted: rgba(0, 0, 0, 0.4);
+  --color-text-on-dark: #FFF9F0;
+
+  /* ── Borders ──
+     The bold 3px black borders are the signature of this design.
+     border-heavy:  the thick outlines on cards, inputs, buttons
+     border-subtle:  dashed empty slots, dividers
+     We define the COLOR here; the WIDTH is handled by the
+     --border-weight-* tokens below. */
+  --color-border-heavy: #000000;
+  --color-border-subtle: rgba(0, 0, 0, 0.3);
+
+  /* ── Destructive / remove ──
+     Used for the "x" remove button on song cards.
+     Keeping it as a token so we don't have random reds. */
+  --color-destructive: #d4183d;
+
+  /* ── Border widths ──
+     The Figma Make output used border-[3px] on almost everything.
+     Naming it makes the pattern intentional, not accidental.
+     "heavy" = structural outlines (cards, inputs, buttons, badges)
+     "thin"  = dividers, secondary borders */
+  --border-weight-heavy: 3px;
+  --border-weight-thin: 1.5px;
+
+  /* ── Border radii ──
+     Three tiers pulled from the Figma output:
+     pill:     fully rounded (buttons, pills, badges, inputs)
+     card:     large radius (panels, song cards, status cards)
+     thumb:    medium radius (album art thumbnails, small elements) */
+  --radius-pill: 9999px;
+  --radius-card: 1rem;
+  --radius-thumb: 0.5rem;
+
+  /* ── Spacing scale ──
+     A consistent spacing scale prevents "magic number" padding.
+     Based on a 4px grid (standard in most design systems).
+     Figma Make used p-4, p-6, p-8 — which map to 16/24/32px.
+     These tokens let you reference the intent, not the number. */
+  --space-xs: 0.25rem;   /* 4px  — tight gaps (icon-to-text) */
+  --space-sm: 0.5rem;    /* 8px  — compact spacing */
+  --space-md: 1rem;      /* 16px — default card padding */
+  --space-lg: 1.5rem;    /* 24px — panel padding */
+  --space-xl: 2rem;      /* 32px — section padding, page margins */
+  --space-2xl: 3rem;     /* 48px — major section gaps */
+
+  /* ── Shadows ──
+     The "neo-brutalist" offset shadows are a signature of this design.
+     They make buttons feel physical — like game pieces you push down.
+     hover:  the shadow appears on hover (card lifts up)
+     active: smaller offset on click (card pushes down) */
+  --shadow-hover: 4px 4px 0px 0px rgba(0, 0, 0, 1);
+  --shadow-active: 2px 2px 0px 0px rgba(0, 0, 0, 1);
+  --shadow-heavy: 6px 6px 0px 0px rgba(0, 0, 0, 1);
+  --shadow-locked: 8px 8px 0px 0px rgba(0, 0, 0, 1);
+
+  /* ── Typography ──
+     Inter is the typeface. The design uses extreme weight contrast:
+     Black (900) for headers and labels, Bold (700) for secondary,
+     Medium (500) for body. This is what gives it the "bold/playful" feel.
+     Tailwind's font-black, font-bold, font-medium map to these. */
+  --font-family-base: "Inter", system-ui, -apple-system, sans-serif;
+  --font-size-hero: 4.5rem;   /* 72px — the "PULSE" title */
+  --font-size-section: 3rem;  /* 48px — "YOUR PICKS" panel headers */
+  --font-size-heading: 1.5rem; /* 24px — counter pills, large numbers */
+  --font-size-body: 1rem;     /* 16px — song titles, labels */
+  --font-size-caption: 0.875rem; /* 14px — artist names, durations */
+  --font-size-micro: 0.75rem; /* 12px — role labels, fine print */
+
+  /* ── Player identity colors ──
+     Player A and B each "own" a color for their status cards,
+     progress bars, and team identity throughout the app.
+     This makes it scannable at a glance — coral = A, teal = B. */
+  --color-player-a: var(--color-section-coral);
+  --color-player-a-deep: var(--color-section-coral-deep);
+  --color-player-b: var(--color-section-teal);
+  --color-player-b-deep: var(--color-section-teal-deep);
+
+  /* ── Seed badge rotation ──
+     Each song pick gets a colored seed number badge.
+     These cycle through the palette so the list feels varied. */
+  --color-seed-1: var(--color-section-teal);
+  --color-seed-2: var(--color-section-coral);
+  --color-seed-3: var(--color-section-lavender);
+  --color-seed-4: var(--color-section-golden);
+  --color-seed-5: var(--color-section-mint);
+  --color-seed-6: var(--color-section-teal);
+  --color-seed-7: var(--color-section-coral);
+  --color-seed-8: var(--color-section-lavender);
 }
 
 body {
-  background-color: var(--color-surface-base);
+  background-color: var(--color-bg-cream);
   color: var(--color-text-primary);
-  font-family:
-    "Inter",
-    system-ui,
-    -apple-system,
-    sans-serif;
+  font-family: var(--font-family-base);
 }
