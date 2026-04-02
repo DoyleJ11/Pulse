@@ -7,12 +7,16 @@ interface SongContainerProps {
   selectedSongs: SongSelection[];
   onRemoveSong: (song: SongSelection) => void;
   onLockIn: () => void;
+  isLoading: boolean;
+  isLockedIn: boolean;
 }
 
 export function SongContainer({
   selectedSongs,
   onRemoveSong,
   onLockIn,
+  isLoading,
+  isLockedIn,
 }: SongContainerProps) {
   const maxSongs = 8;
   const emptySlots = maxSongs - selectedSongs.length;
@@ -21,7 +25,7 @@ export function SongContainer({
   const seedColors = ["#2DD4BF", "#FF7B6B", "#C4B5FD", "#FFD952", "#6EE7B7"];
 
   return (
-    <div className="h-full flex flex-col rounded-card bg-section-golden p-6">
+    <div className={`h-full flex flex-col rounded-3xl bg-section-golden p-6 ${isLockedIn ? 'opacity-50 pointer-events-none' : ''}`}>
       <div className="mb-4">
         <h2
           className="text-5xl font-black uppercase tracking-tight"
@@ -46,6 +50,7 @@ export function SongContainer({
             seed={index + 1}
             seedColor={seedColors[index % seedColors.length]}
             onRemove={() => onRemoveSong(song)}
+            isLockedIn={isLockedIn}
           />
         ))}
 
@@ -55,18 +60,26 @@ export function SongContainer({
       </div>
 
       <button
-        className={`w-full py-5 rounded-pill font-black border-border-heavy text-2xl transition-all duration-200 
+        className={`w-full py-5 rounded-pill font-black border-border-heavy text-2xl transition-all duration-200
             ${
               isComplete
-                ? "bg-section-teal text-black hover:shadow-heavy active:shadow-active active:translate-x-1 active:translate-y-1"
+                ? "bg-section-teal text-black hover:shadow-heavy active:shadow-active active:translate-x-1 active:translate-y-1 cursor-pointer"
                 : "bg-bg-card text-text-muted cursor-not-allowed"
             }`}
         style={{
           borderWidth: "var(--border-weight-heavy)",
         }}
+        disabled={!isComplete || isLockedIn}
         onClick={onLockIn}
       >
-        {isComplete ? (
+        {isLoading ? (
+            "LOADING..."
+        ) : isLockedIn ? (
+          <span className="flex items-center justify-center gap-2">
+            <Lock className="w-6 h-6" strokeWidth={3} />
+            LOCKED IN
+          </span>
+        ) : isComplete ? (
           <span className="flex items-center justify-center gap-2">
             <Lock className="w-6 h-6" strokeWidth={3} />
             LOCK IN

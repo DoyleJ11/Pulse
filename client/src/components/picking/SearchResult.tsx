@@ -4,9 +4,10 @@ import { type DeezerSong } from "../../services/api";
 interface SearchResultProps {
   song: DeezerSong;
   onAdd: () => void;
+  isLockedIn: boolean;
 }
 
-export function SearchResult({ song, onAdd }: SearchResultProps) {
+export function SearchResult({ song, onAdd, isLockedIn }: SearchResultProps) {
   const formatDuration = (duration: number): string => {
     const minutes = Math.floor(duration / 60);
     const seconds = duration % 60;
@@ -35,6 +36,7 @@ export function SearchResult({ song, onAdd }: SearchResultProps) {
 
       <button
         type="button"
+        disabled={isLockedIn}
         onClick={onAdd}
         className="w-10 h-10 rounded-pill bg-section-teal border-border-heavy flex items-center justify-center hover:scale-110 transition-transform active:scale-95 cursor-pointer"
         style={{ borderWidth: "var(--border-weight-heavy)" }}

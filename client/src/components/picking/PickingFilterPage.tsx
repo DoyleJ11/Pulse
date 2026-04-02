@@ -4,6 +4,8 @@ import { SongSelectView } from "./SongSelectView";
 
 export function PickingFilterPage() {
 
+    // On submissionComplete - clear songs, set lockIn false, navigate all users to bracket
+
 return (
     <>
         <PermissionGuard allowedRoles={['player_a', 'player_b']}>

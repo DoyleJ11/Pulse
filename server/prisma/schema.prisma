@@ -37,7 +37,7 @@ model Player {
 model Song {
   id         String  @id @default(cuid())
   playerId   String
-  player     Player  @relation(fields: [playerId], references: [id])
+  player     Player  @relation(fields: [playerId], references: [id], onDelete: Cascade)
   deezerId   String
   title      String
   artist     String

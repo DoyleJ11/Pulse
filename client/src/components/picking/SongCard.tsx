@@ -5,6 +5,7 @@ interface SongCardProps extends SongSelection {
   seed: number;
   seedColor: string;
   onRemove: () => void;
+  isLockedIn: boolean;
 }
 
 export function SongCard({
@@ -16,7 +17,9 @@ export function SongCard({
   seedColor,
   onRemove,
   preview,
+  isLockedIn,
 }: SongCardProps) {
+
   return (
     <main
       className="bg-bg-card border-border-heavy rounded-card flex items-center gap-3 hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transition-shadow"
@@ -53,7 +56,8 @@ export function SongCard({
       {/* Remove Button */}
       <button
         onClick={onRemove}
-        className="w-8 h-8 flex items-center justify-center hover:scale-110 transition-transform active:scale-95 cursor-pointer"
+        disabled={isLockedIn}
+        className={`w-8 h-8 flex items-center justify-center ${isLockedIn ? 'cursor-not-allowed' : 'hover:scale-110 transition-transform active:scale-95 cursor-pointer'}`}
         aria-label="Remove song"
       >
         <X className="w-6 h-6 text-text-primary" strokeWidth={3} />

@@ -4,7 +4,7 @@ export type Role = "player_a" | "player_b" | "judge" | "spectator"| null;
 export type Status = "lobby" | "picking" | "battling" | "complete"
 
 export type SongSelection = {
-    deezerId: number;
+    deezerId: string;
     title: string;
     artist: string;
     albumArt: string;

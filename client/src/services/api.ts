@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { type Role, type Status } from "../types/sharedTypes";
+import { type Role, type Status, type SongSelection } from "../types/sharedTypes";
 
 const RoomSchema = z.object({
   id: z.string(),
@@ -67,15 +67,24 @@ const SongSchema = z.object({
     id: z.string(),
     title: z.string(),
     artist: z.string(),
-    deezerId: z.string(),
     albumArt: z.string(),
+    deezerId: z.string(),
     previewUrl: z.string().nullable(),
     seed: z.number().nullable(),
     provider: z.string(),
     playerId: z.string(),
 })
 
-const SongsSchema = z.array(SongSchema);
+
+const SongsSchema = z.array(SongSchema).length(8, { message: "Must submit exactly 8 songs."})
+
+async function submitPicks(songs: SongSelection[], code: string, token: string) {
+  const body = {songs: songs}
+  const response = await fetchHelper(`/api/rooms/${code}/picks`, "POST", body, token)
+
+  const data = SongsSchema.parse(await response);
+  return data;
+}
 
 
 async function fetchHelper(url: string, method: string, body?: object, token?: string) {
@@ -101,4 +110,4 @@ async function fetchHelper(url: string, method: string, body?: object, token?: s
   return data;
 }
 
-export { createRoom, joinRoom, searchSong, startPicking };
+export { createRoom, joinRoom, searchSong, startPicking, submitPicks };

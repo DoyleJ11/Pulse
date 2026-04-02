@@ -9,6 +9,7 @@ import { faMagnifyingGlass, faPlay } from "@fortawesome/free-solid-svg-icons";
 
 function SongSearch() {
   const addSong = useSongStore((state) => state.addSong);
+  const isLockedIn = useSongStore((state) => state.isLockedIn)
   const [results, setResults] = useState<DeezerSong[]>([]);
   const [query, setQuery] = useState("");
   const debouncedQuery = useDebounce(query, 300);
@@ -36,7 +37,7 @@ function SongSearch() {
   const selectSong = (result: DeezerSong) => {
     // Transform deezer song -> Song format
     const song: SongSelection = {
-      deezerId: result.id,
+      deezerId: result.id.toString(),
       title: result.title,
       artist: result.artist.name,
       albumArt: result.album.cover_medium,
@@ -61,8 +62,9 @@ function SongSearch() {
           {/* Input has no border/bg — the outer container IS the visual "input frame" */}
           <input
             type="text"
+            disabled={isLockedIn}
             placeholder="Search for a song..."
-            className="flex-1 bg-transparent text-text-primary placeholder-text-muted text-sm outline-none"
+            className={`flex-1 bg-transparent text-text-primary placeholder-text-muted text-sm outline-none ${isLockedIn ? 'cursor-not-allowed' : 'cursor-pointer'}`}
             onChange={(e) => setQuery(e.target.value)}
           />
         </div>
@@ -77,6 +79,7 @@ function SongSearch() {
               <li key={result.id}>
                 <button
                   type="button"
+                  disabled={isLockedIn}
                   className="w-full flex items-center gap-3 px-5 py-2.5 hover:bg-surface-hover transition-colors text-left cursor-pointer group"
                   onClick={() => {
                     selectSong(result);

@@ -2,19 +2,38 @@ import { SearchContainer } from "./SearchContainer";
 import { SongContainer } from "./SongContainer";
 import { useSongStore } from "../../stores/songStore";
 import { useRoomStore } from "../../stores/roomStore";
+import { useAuthStore } from "../../stores/authStore";
+import { submitPicks } from "../../services/api";
+import { useToastStore } from "../../stores/toastStore";
+import { useState } from "react";
+import { WaitingOverlay } from "./WaitingOverlay";
 
 export function PlayerSongSelect() {
   const selectedSongs = useSongStore((state) => state.selectedSongs);
   const removeSong = useSongStore((state) => state.removeSong);
   const addSong = useSongStore((state) => state.addSong);
+  const setLockIn = useSongStore((state) => state.setLockIn)
+  const isLockedIn = useSongStore((state) => state.isLockedIn)
   const roomCode = useRoomStore((state) => state.code);
+  const token = useAuthStore((state) => state.token);
+  const [isLoading, setIsLoading] = useState(false)
 
-  const onLockIn = () => {
-    // Will wire to submitPicks API call in a future phase
+  const onLockIn = async () => {
+    setIsLoading(true)
+    try {
+        await submitPicks(selectedSongs, roomCode, token)
+        setLockIn(true)
+        setIsLoading(false)
+    } catch (err) {
+        console.error("Error locking in: ", err)
+        setIsLoading(false)
+        useToastStore.getState().addToast("Error locking in. Please try again.", "error")
+    }
   };
 
   return (
     <div className="min-h-screen bg-bg-cream p-8">
+      {isLockedIn && <WaitingOverlay />}
       <div className="max-w-[1000px] mx-auto">
         {/* Page header */}
         <div className="flex items-start justify-between mb-8">
@@ -46,11 +65,13 @@ export function PlayerSongSelect() {
           className="grid grid-cols-2 gap-6"
           style={{ height: "calc(100vh - 200px)" }}
         >
-          <SearchContainer onAddSong={addSong} />
+          <SearchContainer onAddSong={addSong} isLockedIn={isLockedIn} />
           <SongContainer
             selectedSongs={selectedSongs}
             onRemoveSong={removeSong}
             onLockIn={onLockIn}
+            isLoading={isLoading}
+            isLockedIn={isLockedIn}
           />
         </div>
       </div>

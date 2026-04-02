@@ -8,9 +8,10 @@ import { SearchResult } from "./SearchResult";
 
 interface SearchContainerProps {
   onAddSong: (song: SongSelection) => void;
+  isLockedIn: boolean;
 }
 
-export function SearchContainer({ onAddSong }: SearchContainerProps) {
+export function SearchContainer({ onAddSong, isLockedIn }: SearchContainerProps) {
   const [results, setResults] = useState<DeezerSong[]>([]);
   const [query, setQuery] = useState("");
   const debouncedQuery = useDebounce(query, 300);
@@ -28,7 +29,7 @@ export function SearchContainer({ onAddSong }: SearchContainerProps) {
 
   const selectSong = (result: DeezerSong): void => {
     const song: SongSelection = {
-      deezerId: result.id,
+      deezerId: result.id.toString(),
       title: result.title,
       artist: result.artist.name,
       albumArt: result.album.cover_medium,
@@ -39,12 +40,13 @@ export function SearchContainer({ onAddSong }: SearchContainerProps) {
   };
 
   return (
-    <div className="h-full flex flex-col rounded-card bg-section-coral p-6">
+    <div className={`h-full flex flex-col rounded-3xl bg-section-coral p-6 ${isLockedIn ? 'opacity-50 pointer-events-none' : ''}`}>
       {/* Search input */}
       <div className="relative mb-4">
         <input
           type="text"
           placeholder="Search for a song..."
+          disabled={isLockedIn}
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           className="w-full px-5 py-4 pl-14 rounded-pill bg-bg-card text-text-primary
@@ -65,6 +67,7 @@ export function SearchContainer({ onAddSong }: SearchContainerProps) {
             key={result.id}
             song={result}
             onAdd={() => selectSong(result)}
+            isLockedIn={isLockedIn}
           />
         ))}
       </div>
