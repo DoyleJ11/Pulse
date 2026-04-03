@@ -53,6 +53,21 @@ function registerRoomEvents(io: Server, socket: Socket) {
       socket.emit("error", { message: "Could not disconnect" });
     }
   });
+
+  socket.on("pickUpdate", (data) => {
+    try {
+      io.to(data.code).emit("pickUpdate", {
+        songCount: data.songCount,
+        userId: data.userId,
+        name: data.name,
+        role: data.role,
+        lockedIn: data.lockedIn,
+      })
+    } catch (error) {
+      console.error("Failed to emit pickUpdate event")
+    }
+  })
+
 }
 
 function submissionComplete(code: string) {

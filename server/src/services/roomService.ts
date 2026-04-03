@@ -162,7 +162,7 @@ async function submitPicks(songs: Song[], user: Payload, code: string) {
   const bothPlayersReady = await checkPlayersSubmitted(user.roomId)
 
   if (bothPlayersReady) {
-    prisma.room.update({
+    await prisma.room.update({
       data: {
         status: "battling",
       },
