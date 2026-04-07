@@ -1,16 +1,54 @@
 import { Routes, Route } from "react-router";
 import { LandingPage } from "./components/lobby/LandingPage";
 import { Lobby } from "./components/lobby/Lobby";
-import { SongSearch } from "./components/picking/SongSearch";
 import { PickingFilterPage } from "./components/picking/PickingFilterPage"
+import { useEffect } from "react";
+import { socket } from "./utils/socket";
+import { useRoomStore } from "./stores/roomStore";
+import { useAuthStore } from "./stores/authStore";
 
 function App() {
+ const lobbyCode = useRoomStore((state) => state.code);
+ const token = useAuthStore((state) => state.token);
+ const userId = useAuthStore((state) => state.userId);
+ const name = useAuthStore((state) => state.name);
+ const role = useAuthStore((state) => state.role);
+
+  useEffect(() => {
+    if (lobbyCode && userId) {
+      socket.on("connect", () => {
+        socket.emit("joinRoom", {
+          id: userId,
+          code: lobbyCode,
+          name: name,
+          token: token,
+          role: role,
+        });
+      })
+
+      if (!socket.connected) {
+        socket.connect()
+      } else {
+        socket.emit("joinRoom", {
+          id: userId,
+          code: lobbyCode,
+          name: name,
+          token: token,
+          role: role,
+        });
+      }
+    }
+
+    return () => {
+      socket.off("connect");
+    }
+  }, [])
+
   return (
     <Routes>
       <Route path="/" element={<LandingPage />} />
       <Route path="/lobby/:code" element={<Lobby />} />
       <Route path="/lobby/:code/picking" element={<PickingFilterPage />}/>
-      <Route path="/search" element={<div className="h-screen flex items-center justify-center p-6"><SongSearch /></div>} />
     </Routes>
   );
 }

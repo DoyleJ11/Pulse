@@ -148,10 +148,10 @@ async function submitPicks(songs: Song[], user: Payload, code: string) {
     prisma.song.create({
       data: {
         playerId: user.userId,
-        deezerId: song.id,
+        deezerId: song.deezerId,
         title: song.title,
         artist: song.artist,
-        albumArt: song.album_art,
+        albumArt: song.albumArt,
         previewUrl: song.preview,
         seed: null,
       },
@@ -160,6 +160,15 @@ async function submitPicks(songs: Song[], user: Payload, code: string) {
 
   const newSongs = await prisma.$transaction(createPromises);
   const bothPlayersReady = await checkPlayersSubmitted(user.roomId)
+
+  if (bothPlayersReady) {
+    await prisma.room.update({
+      data: {
+        status: "battling",
+      },
+      where: { id: user?.roomId }
+    })
+  }
 
   return { newSongs, bothPlayersReady };
 }

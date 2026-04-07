@@ -16,10 +16,10 @@ const NameSchema = z
 const CodeSchema = z.string().trim().min(6, "Code must be 6 characters").max(6);
 
 const SongSchema = z.object({
-  id: z.string(),
+  deezerId: z.string(),
   title: z.string(),
   artist: z.string(),
-  album_art: z.string(),
+  albumArt: z.string(),
   preview: z.string(),
 });
 export type Song = z.infer<typeof SongSchema>;
