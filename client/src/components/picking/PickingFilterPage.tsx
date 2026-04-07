@@ -32,8 +32,7 @@ return (
             <PlayerSongSelect />
         </PermissionGuard>
         <PermissionGuard allowedRoles={['judge', 'spectator']}>
-            <p>Only judges and spectators should be able to see this</p>
-            <JudgeSelectView />
+            <JudgeSelectView code={lobbyCode} theme={null}/>
         </PermissionGuard>
     </>
 )

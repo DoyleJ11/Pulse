@@ -5,7 +5,7 @@ import { useRoomStore } from "../../stores/roomStore";
 import { useAuthStore } from "../../stores/authStore";
 import { submitPicks } from "../../services/api";
 import { useToastStore } from "../../stores/toastStore";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { WaitingOverlay } from "./WaitingOverlay";
 import { socket } from "../../utils/socket";
 
@@ -21,17 +21,51 @@ export function PlayerSongSelect() {
   const role = useAuthStore((state) => state.role)
   const token = useAuthStore((state) => state.token);
   const [isLoading, setIsLoading] = useState(false)
+  const pickRef = useRef({
+    songCount: selectedSongs.length,
+    code: roomCode,
+    userId: userId,
+    name: name,
+    role: role,
+    isLockedIn: isLockedIn,
+  })
 
   useEffect(() => {
+    pickRef.current = {
+      songCount: selectedSongs.length,
+      code: roomCode,
+      userId: userId,
+      name: name,
+      role: role,
+      isLockedIn: isLockedIn,
+    }
+
     socket.emit("pickUpdate", {
-        songCount: selectedSongs.length,
-        code: roomCode,
-        userId: userId,
-        name: name,
-        role: role,
-        lockedIn: isLockedIn,
+      songCount: selectedSongs.length,
+      code: roomCode,
+      userId: userId,
+      name: name,
+      role: role,
+      lockedIn: isLockedIn,
     })
   }, [selectedSongs.length, isLockedIn])
+
+  useEffect(() => {
+    socket.on("roomState", () => {
+      socket.emit("pickUpdate", {
+        songCount: pickRef.current.songCount,
+        code: pickRef.current.code,
+        userId: pickRef.current.userId,
+        name: pickRef.current.name,
+        role: pickRef.current.role,
+        lockedIn: pickRef.current.isLockedIn,
+      })
+    })
+
+    return () => {
+      socket.off("roomState")
+    }
+  }, [])
 
   const onLockIn = async () => {
     setIsLoading(true)
