@@ -30,6 +30,7 @@ export function SearchContainer({ onAddSong, isLockedIn }: SearchContainerProps)
   const selectSong = (result: DeezerSong): void => {
     const song: SongSelection = {
       deezerId: result.id.toString(),
+      deezerRank: result.rank,
       title: result.title,
       artist: result.artist.name,
       albumArt: result.album.cover_medium,

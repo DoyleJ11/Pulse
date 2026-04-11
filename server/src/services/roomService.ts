@@ -7,6 +7,7 @@ import type { Room } from "../../generated/prisma/client.js";
 import { RoomError } from "../utils/customErrors.js";
 import { type Song } from "../routes/rooms.js";
 import type { Payload } from "../middleware/auth.js";
+import { seedSongs } from "./bracketService.js";
 
 async function createRoom(name: string) {
   const roomCode = generateCode();
@@ -149,6 +150,7 @@ async function submitPicks(songs: Song[], user: Payload, code: string) {
       data: {
         playerId: user.userId,
         deezerId: song.deezerId,
+        deezerRank: song.deezerRank,
         title: song.title,
         artist: song.artist,
         albumArt: song.albumArt,
@@ -162,6 +164,7 @@ async function submitPicks(songs: Song[], user: Payload, code: string) {
   const bothPlayersReady = await checkPlayersSubmitted(user.roomId)
 
   if (bothPlayersReady) {
+    await seedSongs(code);
     await prisma.room.update({
       data: {
         status: "battling",

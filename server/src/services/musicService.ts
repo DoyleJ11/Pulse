@@ -6,6 +6,7 @@ const DeezerTrackSchema = z.object({
   title_short: z.string(),
   duration: z.number(),
   preview: z.string(),
+  rank: z.number(),
   artist: z.object({
     id: z.number(),
     name: z.string(),

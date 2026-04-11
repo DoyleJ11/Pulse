@@ -7,6 +7,7 @@ import express, {
 import { CustomError } from "./utils/customErrors.js";
 import { router as roomRouter } from "./routes/rooms.js";
 import { router as searchRouter } from "./routes/search.js";
+import { router as bracketRouter } from "./routes/bracket.js";
 import { env } from "./utils/config.js";
 import { ZodError } from "zod";
 import { initSocket } from "./utils/socket.js";
@@ -24,7 +25,7 @@ app.get("/api/health", (req: Request, res: Response) => {
 });
 
 app.use("/api/rooms", roomRouter);
-
+app.use("/api/rooms", bracketRouter);
 app.use("/api/search", searchRouter);
 
 app.use((err: Error, req: Request, res: Response, next: NextFunction) => {

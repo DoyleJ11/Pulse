@@ -5,6 +5,7 @@ export type Status = "lobby" | "picking" | "battling" | "complete"
 
 export type SongSelection = {
     deezerId: string;
+    deezerRank: number;
     title: string;
     artist: string;
     albumArt: string;
@@ -16,6 +17,7 @@ export type Song = {
     title: string;
     artist: string;
     deezerId: string;
+    deezerRank: number;
     albumArt: string;
     previewUrl: string | null;
     seed: number | null;

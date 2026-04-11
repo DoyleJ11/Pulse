@@ -6,6 +6,8 @@ import { useEffect } from "react";
 import { socket } from "./utils/socket";
 import { useRoomStore } from "./stores/roomStore";
 import { useAuthStore } from "./stores/authStore";
+import { BracketView } from "./components/bracket/BracketView";
+import { BracketTest } from "./components/bracket/BracketTest";
 
 function App() {
  const lobbyCode = useRoomStore((state) => state.code);
@@ -49,6 +51,8 @@ function App() {
       <Route path="/" element={<LandingPage />} />
       <Route path="/lobby/:code" element={<Lobby />} />
       <Route path="/lobby/:code/picking" element={<PickingFilterPage />}/>
+      <Route path="/lobby/:code/bracket" element={<BracketView />} />
+      <Route path="/test" element={<BracketTest />} />
     </Routes>
   );
 }

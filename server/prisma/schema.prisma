@@ -39,6 +39,7 @@ model Song {
   playerId   String
   player     Player  @relation(fields: [playerId], references: [id], onDelete: Cascade)
   deezerId   String
+  deezerRank Int
   title      String
   artist     String
   albumArt   String // URL
