@@ -1,4 +1,5 @@
 import { createRoom, joinRoom, submitPicks, setToPicking } from "../services/roomService.js";
+import { seedSongs } from "../services/bracketService.js";
 import express from "express";
 import { z } from "zod";
 import { authMiddleware } from "../middleware/auth.js";
@@ -17,6 +18,7 @@ const CodeSchema = z.string().trim().min(6, "Code must be 6 characters").max(6);
 
 const SongSchema = z.object({
   deezerId: z.string(),
+  deezerRank: z.number(),
   title: z.string(),
   artist: z.string(),
   albumArt: z.string(),
@@ -79,5 +81,12 @@ router.post("/:code/picks", authMiddleware, asyncHandler(async (req, res) => {
 
   res.json(newSongs);
 }));
+
+router.get("/:code/test-seed", asyncHandler(async (req, res) => {
+  const code = CodeSchema.parse(req.params.code)
+  const result = await seedSongs(code);
+  res.json(result);
+}));
+
 
 export { router };

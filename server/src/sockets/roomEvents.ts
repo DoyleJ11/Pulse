@@ -1,6 +1,7 @@
 import type { Server, Socket } from "socket.io";
-import { getAllUsers, removeUser } from "../utils/dbUtils.js";
+import { getAllUsers, removeUser, getUserRoleById } from "../utils/dbUtils.js";
 import { getIo } from "../utils/socket.js";
+import { isValidPick, updateBracket } from "../services/bracketService.js"
 
 const disconnectMap: Map<string, NodeJS.Timeout> = new Map<
   string,
@@ -65,6 +66,26 @@ function registerRoomEvents(io: Server, socket: Socket) {
       })
     } catch (error) {
       console.error("Failed to emit pickUpdate event")
+    }
+  })
+
+  socket.on("judgePick", async (data) => {
+    try {
+      const role = await getUserRoleById(socket.data.userId)
+      if (role === "judge") {
+        await isValidPick(data.code, data.matchupIndex, data.winnerSongId);
+
+        const { state, currentMatchup } = await updateBracket(data.code, data.matchupIndex, data.winnerSongId);
+        io.to(data.code).emit("bracketUpdated", { state, currentMatchup });
+
+        if (currentMatchup === null) {
+              io.to(data.code).emit("bracketComplete", { champion: state[0] });
+          }
+      } else {
+        throw new Error("Only judges can submit picks");
+      }
+    } catch (error) {
+      socket.emit("error", { message: "Failed to emit bracketUpdated event" })
     }
   })
 

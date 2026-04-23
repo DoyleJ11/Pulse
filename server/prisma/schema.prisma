@@ -39,6 +39,7 @@ model Song {
   playerId   String
   player     Player  @relation(fields: [playerId], references: [id], onDelete: Cascade)
   deezerId   String
+  deezerRank Int
   title      String
   artist     String
   albumArt   String // URL
@@ -55,5 +56,5 @@ model Bracket {
   // Array of 31 slots (indicies 0-30 for a 16 song bracket)
   // Each slot: { songId, deezerId, title, artist, albumArt, previewUrl, submittedBy } | null
   state          Json
-  currentMatchup Int    @default(0) // Index of current matchup being judged
+  currentMatchup Int    @default(7) // Index of current matchup being judged
 }

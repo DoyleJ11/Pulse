@@ -39,6 +39,7 @@ const DeezerSchema = z.object({
   title_short: z.string(),
   duration: z.number(),
   preview: z.string(),
+  rank: z.number(),
   artist: z.object({
     id: z.number(),
     name: z.string(),
@@ -69,6 +70,7 @@ const SongSchema = z.object({
     artist: z.string(),
     albumArt: z.string(),
     deezerId: z.string(),
+    deezerRank: z.number(),
     previewUrl: z.string().nullable(),
     seed: z.number().nullable(),
     provider: z.string(),
@@ -83,6 +85,20 @@ async function submitPicks(songs: SongSelection[], code: string, token: string) 
   const response = await fetchHelper(`/api/rooms/${code}/picks`, "POST", body, token)
 
   const data = SongsSchema.parse(await response);
+  return data;
+}
+
+const BracketSchema = z.object({
+  id: z.string(),
+  roomId: z.string(),
+  state: z.array(z.unknown().nullable()),
+  currentMatchup: z.number(),
+})
+
+async function fetchBracket(code: string) {
+  const response = await fetchHelper(`/api/rooms/${code}/bracket`, "GET");
+
+  const data = BracketSchema.parse(await response);
   return data;
 }
 
@@ -103,6 +119,8 @@ async function fetchHelper(url: string, method: string, body?: object, token?: s
   });
 
   if (!response.ok) {
+    const errorBody = await response.json().catch(() => null);
+    console.error("Error response:", errorBody);
     throw new Error(`HTTP error. status: ${response.status}`);
   }
 
@@ -110,4 +128,4 @@ async function fetchHelper(url: string, method: string, body?: object, token?: s
   return data;
 }
 
-export { createRoom, joinRoom, searchSong, startPicking, submitPicks };
+export { createRoom, joinRoom, searchSong, startPicking, submitPicks, fetchBracket };

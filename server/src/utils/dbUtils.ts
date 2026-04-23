@@ -23,4 +23,15 @@ async function removeUser(userId: string) {
   });
 }
 
-export { getAllUsers, removeUser };
+async function getUserRoleById(userId: string) {
+  const user = await prisma.player.findUnique({
+    where: { id: userId }
+  });
+  if (!user) {
+    throw new Error(`Cannot find user with id: ${userId}`);
+  }
+
+  return user.role
+}
+
+export { getAllUsers, removeUser, getUserRoleById };
