@@ -9,7 +9,7 @@ import type { Player, Song } from "../../generated/prisma/client.js";
 // Finals:       indicies 1-2
 // Champion:     index 0
 
-interface bracketSlot {
+interface BracketSlot {
     songId: string,
     deezerId: string,
     title: string,
@@ -80,14 +80,14 @@ async function generateBracket(playerASongs: Song[], playerBSongs: Song[], playe
     // Once all songs inserted, create bracket record in DB and store array as JSON on the state property of the bracket record.
 
     const result = await prisma.$transaction(async (tx) => {
-        const bracket: (null | bracketSlot)[] = Array(31).fill(null);
+        const bracket: (null | BracketSlot)[] = Array(31).fill(null);
         playerASongs.forEach((song, index) => {
             let oddIndex = 15 + (index * 2);
             if (!song.seed) {
                 song.seed = 0;
             }
 
-            const bracketItem: bracketSlot = {
+            const bracketItem: BracketSlot = {
                 songId: song.id,
                 deezerId: song.deezerId,
                 title: song.title,
@@ -109,7 +109,7 @@ async function generateBracket(playerASongs: Song[], playerBSongs: Song[], playe
                 song.seed = 0;
             }
 
-            const bracketItem: bracketSlot = {
+            const bracketItem: BracketSlot = {
                 songId: song.id,
                 deezerId: song.deezerId,
                 title: song.title,
@@ -117,7 +117,7 @@ async function generateBracket(playerASongs: Song[], playerBSongs: Song[], playe
                 albumArt: song.albumArt,
                 previewUrl: song.previewUrl,
                 submittedBy: song.playerId,
-                role: playerA.role,
+                role: song.playerId === playerA.id ? playerA.role : playerB.role,
                 seed: song.seed,
             }
             bracket[evenIndex] = bracketItem;
@@ -142,6 +142,7 @@ async function generateBracket(playerASongs: Song[], playerBSongs: Song[], playe
             data: {
                 roomId: roomId,
                 state: bracket as Prisma.InputJsonValue,
+                currentMatchup: 7,
             }
         });        
     });
@@ -164,6 +165,103 @@ async function fetchBracket(code: string) {
     return bracket;
 }
 
+async function isValidPick(code: string, matchupIndex: number, winnerSongId: string): Promise<void> {
+    const room = await prisma.room.findUnique({
+        where: { code: code },
+        include: { bracket: true }
+    });
+    if (!room) {
+        throw new RoomError(`Cannot find room`, code, "battling")
+    }
+    if (!room.bracket) throw new RoomError(`Cannot find bracket`, code, "battling")
+    if (!room.bracket.state) throw new RoomError(`Cannot find bracket state`, code, "battling")
+    if (room.status !== "battling") throw new RoomError(`Incorrect room status`, code, "battling")
+
+    if (matchupIndex !== room.bracket.currentMatchup) {
+        throw new Error("Current matchup does not match provided matchup")
+    }
+
+    const children = getChildren(matchupIndex);
+    const bracket = room.bracket.state as (BracketSlot | null)[]
+    const left = bracket[children[0]];
+    const right = bracket[children[1]];
+
+    if (!left || !right) throw new Error("Children cannot be null")
+
+    if (left && right && winnerSongId !== left.songId && winnerSongId !== right.songId) {
+        throw new Error("Winner does not match either matchup children")
+    }
+}
+
+async function updateBracket(code: string, matchupIndex: number, winnerSongId: string): Promise<{ state: (BracketSlot | null)[]; currentMatchup: number | null }> {
+    const room = await prisma.room.findUnique({
+        where: { code: code },
+        include: { bracket: true }
+    });
+    if (!room) {
+        throw new RoomError(`Cannot find room`, code, "battling")
+    }
+    if (!room.bracket) {
+        throw new RoomError(`Cannot find bracket`, code, "battling")
+    }
+    if (!room.bracket.state) {
+        throw new RoomError(`Cannot find bracket state`, code, "battling")
+    }
+
+    const bracket = room.bracket.state as (BracketSlot | null)[]
+    let nextMatchup: number | null = null;
+
+    const updatedBracket = applyWinner(bracket, matchupIndex, winnerSongId);
+    nextMatchup = findNextMatchup(updatedBracket);
+
+    await prisma.$transaction(async (tx) => {
+        if (nextMatchup === null) {
+            await tx.room.update({
+                where: { id: room.id },
+                data: { status: "complete" }
+            })
+        }
+
+        await tx.bracket.update({
+            where: { roomId: room.id },
+            data: { state: updatedBracket as Prisma.InputJsonValue, currentMatchup: nextMatchup ?? room.bracket!.currentMatchup }
+        })
+    });
+
+    return { state: updatedBracket, currentMatchup: nextMatchup };
+}
+
+function findNextMatchup(bracket: (BracketSlot | null)[]): number | null {
+    const rounds: [number, number][] = [[7, 14], [3, 6], [1, 2], [0, 0]];
+
+    for(const [start, end] of rounds) {
+        for (let k = start; k <= end; k++) {
+            const children = getChildren(k);
+            if (bracket[k] === null && bracket[children[0]] != null && bracket[children[1]] != null) {
+                return k;
+            }
+        }
+    }
+    return null;
+}
+
+function applyWinner(bracket: (BracketSlot | null)[], matchupIndex: number, winnerSongId: string): (BracketSlot | null)[] {
+    const children = getChildren(matchupIndex);
+    const left = bracket[children[0]];
+    const right = bracket[children[1]];
+    let updatedBracket: (BracketSlot | null)[] = [...bracket]
+
+    if (left && winnerSongId === left.songId) {
+        updatedBracket = bracket.with(matchupIndex, left)
+    } else if (right && winnerSongId === right.songId) {
+        updatedBracket = bracket.with(matchupIndex, right)
+    } else {
+        throw new Error("Invalid bracket state while applying winner.")
+    }
+
+    return updatedBracket;
+}
+
 // Get the two children of any matchup slot
 function getChildren(parentIndex: number): [number, number] {
     return [2 * parentIndex + 1, 2 * parentIndex + 2];
@@ -184,4 +282,4 @@ function isLeaf(index: number, totalSlots: number): boolean {
     return 2 * index + 1 >= totalSlots;
 }
 
-export { seedSongs, fetchBracket }
+export { seedSongs, fetchBracket, isValidPick, updateBracket, findNextMatchup, applyWinner }

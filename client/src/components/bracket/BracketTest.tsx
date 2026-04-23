@@ -1,8 +1,7 @@
 import { MatchupCard } from "./MatchupCard";
 import { type BracketSlot } from "./BracketView";
 import { Matchup } from "./Matchup";
-import { BracketRound } from "./BracketRound";
-import { getMatchups } from "../../utils/bracketUtils";
+import { BracketPairing } from "./BracketPairing";
 
 const playerASongs: BracketSlot[] = [
     {
@@ -364,55 +363,17 @@ export function BracketTest() {
                 </div>
             </section>
 
-            {/* ===== BRACKET ROUND TESTS ===== */}
-            <h1 className="text-4xl font-black mb-8 mt-16 pt-8 border-t-[3px] border-black">BRACKET ROUND TEST</h1>
-
-            {/* Round 1: All 8 matchups, first matchup active */}
-            <section className="mb-12">
-                <h2 className="text-2xl font-black mb-2 uppercase">Round 1 — Full (First Matchup Active)</h2>
-                <p className="text-sm font-bold text-text-muted mb-4">8 matchups, currentMatchup=7, first matchup should be ACTIVE, rest NORMAL</p>
-                <div className="border-[3px] border-dashed border-black/20 rounded-2xl p-6 bg-bg-card">
-                    <BracketRound
-                        round={1}
-                        bracket={mockBracket}
-                        currentMatchup={7}
-                        bracketPairs={getMatchups(1)}
-                        onPick={() => console.log("Round 1 pick")}
-                        onPlay={() => console.log("Round 1 play")}
-                    />
-                </div>
-            </section>
-
-            {/* Round 2: All empty (no winners advanced yet) */}
-            <section className="mb-12">
-                <h2 className="text-2xl font-black mb-2 uppercase">Round 2 — Empty (Waiting for Round 1)</h2>
-                <p className="text-sm font-bold text-text-muted mb-4">4 matchups, all TBD placeholders since no winners have advanced</p>
-                <div className="border-[3px] border-dashed border-black/20 rounded-2xl p-6 bg-bg-card">
-                    <BracketRound
-                        round={2}
-                        bracket={mockBracket}
-                        currentMatchup={7}
-                        bracketPairs={getMatchups(2)}
-                        onPick={() => {}}
-                        onPlay={() => {}}
-                    />
-                </div>
-            </section>
-            {/* ===== BRACKET VIEW TEST ===== */}
-            <h1 className="text-4xl font-black mb-8 mt-16 pt-8 border-t-[3px] border-black">BRACKET VIEW TEST</h1>
+            {/* ===== BRACKET PAIRING TESTS ===== */}
+            <h1 className="text-4xl font-black mb-8 mt-16 pt-8 border-t-[3px] border-black">BRACKET PAIRING TEST</h1>
 
             {/* Full bracket: fresh game, first matchup active */}
             <section className="mb-12">
                 <h2 className="text-2xl font-black mb-2 uppercase">Full Bracket — Fresh Game</h2>
-                <p className="text-sm font-bold text-text-muted mb-4">All 4 rounds rendered side by side. Round 1 filled, rounds 2-4 empty. First matchup active. Champion awaiting.</p>
+                <p className="text-sm font-bold text-text-muted mb-4">All 4 rounds rendered recursively. Round 1 filled, rounds 2-4 empty. First matchup active. Champion awaiting.</p>
                 <div className="border-[3px] border-dashed border-black/20 rounded-2xl p-6 bg-bg-cream overflow-auto">
-                    <div className="flex flex-row gap-10 items-stretch" style={{ minWidth: "2200px", height: "2400px" }}>
-                        <BracketRound round={1} bracket={mockBracket} currentMatchup={7} bracketPairs={getMatchups(1)} onPick={() => console.log("Pick")} onPlay={() => console.log("Play")} />
-                        <BracketRound round={2} bracket={mockBracket} currentMatchup={7} bracketPairs={getMatchups(2)} onPick={() => {}} onPlay={() => {}} />
-                        <BracketRound round={3} bracket={mockBracket} currentMatchup={7} bracketPairs={getMatchups(3)} onPick={() => {}} onPlay={() => {}} />
-                        <BracketRound round={4} bracket={mockBracket} currentMatchup={7} bracketPairs={getMatchups(4)} onPick={() => {}} onPlay={() => {}} />
-                        {/* Champion slot */}
-                        <div className="self-center w-[420px] h-[200px] bg-[#FFD952] border-[3px] border-dashed border-black rounded-3xl flex flex-col items-center justify-center flex-shrink-0">
+                    <div className="flex flex-row items-center gap-12">
+                        <BracketPairing parentIndex={0} round={4} bracket={mockBracket} currentMatchup={7} onPick={() => console.log("Pick")} onPlay={() => console.log("Play")} />
+                        <div className="w-[420px] h-[200px] bg-[#FFD952] border-[3px] border-dashed border-black rounded-3xl flex flex-col items-center justify-center flex-shrink-0">
                             <div className="text-black/40 font-black text-lg">AWAITING CHAMPION</div>
                         </div>
                     </div>
@@ -424,23 +385,16 @@ export function BracketTest() {
                 <h2 className="text-2xl font-black mb-2 uppercase">Full Bracket — Mid-Game (3 Matchups Decided)</h2>
                 <p className="text-sm font-bold text-text-muted mb-4">First 3 matchups decided, 4th matchup active. Winners should appear in Quarterfinals.</p>
                 {(() => {
-                    // Build a mid-game bracket: first 3 matchups decided
                     const midGameBracket = [...mockBracket];
-                    // Matchup 1 winner (parent index 7): A1 wins over B8
                     midGameBracket[7] = allPlayerA[0];
-                    // Matchup 2 winner (parent index 8): B7 wins over A2
                     midGameBracket[8] = allPlayerB[1];
-                    // Matchup 3 winner (parent index 9): A3 wins over B6
                     midGameBracket[9] = allPlayerA[2];
 
                     return (
                         <div className="border-[3px] border-dashed border-black/20 rounded-2xl p-6 bg-bg-cream overflow-auto">
-                            <div className="flex flex-row gap-10 items-stretch" style={{ minWidth: "2200px" }}>
-                                <BracketRound round={1} bracket={midGameBracket} currentMatchup={10} bracketPairs={getMatchups(1)} onPick={() => console.log("Pick")} onPlay={() => console.log("Play")} />
-                                <BracketRound round={2} bracket={midGameBracket} currentMatchup={10} bracketPairs={getMatchups(2)} onPick={() => {}} onPlay={() => {}} />
-                                <BracketRound round={3} bracket={midGameBracket} currentMatchup={10} bracketPairs={getMatchups(3)} onPick={() => {}} onPlay={() => {}} />
-                                <BracketRound round={4} bracket={midGameBracket} currentMatchup={10} bracketPairs={getMatchups(4)} onPick={() => {}} onPlay={() => {}} />
-                                <div className="self-center w-[420px] h-[200px] bg-[#FFD952] border-[3px] border-dashed border-black rounded-3xl flex flex-col items-center justify-center flex-shrink-0">
+                            <div className="flex flex-row items-center gap-12">
+                                <BracketPairing parentIndex={0} round={4} bracket={midGameBracket} currentMatchup={10} onPick={() => console.log("Pick")} onPlay={() => console.log("Play")} />
+                                <div className="w-[420px] h-[200px] bg-[#FFD952] border-[3px] border-dashed border-black rounded-3xl flex flex-col items-center justify-center flex-shrink-0">
                                     <div className="text-black/40 font-black text-lg">AWAITING CHAMPION</div>
                                 </div>
                             </div>

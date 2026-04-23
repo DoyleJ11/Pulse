@@ -1,13 +1,13 @@
 import { useEffect, useState } from "react"
 import { fetchBracket } from "../../services/api"
 import { useRoomStore } from "../../stores/roomStore"
-import { BracketRound } from "./BracketRound"
-import { getMatchups } from "../../utils/bracketUtils"
+import { BracketPairing } from "./BracketPairing"
+import { socket } from "../../utils/socket";
 
 interface Bracket {
     id: string;
     roomId: string;
-    currentMatchup: number;
+    currentMatchup: number | null;
 }
 
 export interface BracketSlot {
@@ -24,15 +24,25 @@ export interface BracketSlot {
 
 export function BracketView() {
     const lobbyCode = useRoomStore((state) => state.code);
-    const [bracket, setBracket] = useState<Bracket>({id: "", roomId: "", currentMatchup: 0});
+    const [bracket, setBracket] = useState<Bracket>({id: "", roomId: "", currentMatchup: 7});
     const [bracketSlots, setBracketSlots] = useState<(BracketSlot | null)[]>([]);
-    const startingPairs = getMatchups(1)
-    const quarterPairs = getMatchups(2)
-    const semiPairs = getMatchups(3)
-    const finalPairs = getMatchups(4)
 
     useEffect(() => {
+        socket.on("bracketUpdated", ({state, currentMatchup}) => {
+            setBracketSlots(state)
+            setBracket(prev => ({...prev, currentMatchup}))
+        })
+
+        socket.on("bracketComplete", () => {
+            console.log("Bracket complete!")
+        })
+
         getBracket()
+
+        return () => { 
+            socket.off("bracketUpdated")
+            socket.off("bracketComplete") 
+        }
     }, [])
 
     const getBracket = async () => {
@@ -42,8 +52,12 @@ export function BracketView() {
         setBracketSlots(bracketState);
     }
 
-    const onPick = () => {
-        console.log("Picked!");
+    const onPick = (matchupIndex: number, winnerSongId: string) => {
+        socket.emit("judgePick", {
+            code: lobbyCode,
+            matchupIndex: matchupIndex,
+            winnerSongId: winnerSongId,
+        })
     }
 
     const onPlay = () => {
@@ -51,15 +65,19 @@ export function BracketView() {
     }
 
     return (
-        <div>
-            <div className="overflow-auto">
-                <div className="flex flex-row gap-12 items-stretch">
-                    <BracketRound round={1} bracket={bracketSlots} currentMatchup={bracket.currentMatchup} bracketPairs={startingPairs} onPick={onPick} onPlay={onPlay}/>
-                    <BracketRound round={2} bracket={bracketSlots} currentMatchup={bracket.currentMatchup} bracketPairs={quarterPairs} onPick={onPick} onPlay={onPlay}/>
-                    <BracketRound round={3} bracket={bracketSlots} currentMatchup={bracket.currentMatchup} bracketPairs={semiPairs} onPick={onPick} onPlay={onPlay}/>
-                    <BracketRound round={4} bracket={bracketSlots} currentMatchup={bracket.currentMatchup} bracketPairs={finalPairs} onPick={onPick} onPlay={onPlay}/>
+        <div className="m-6 p-4">
+            <div className="overflow-x-auto">
+                <div className="flex flex-row gap-12 items-center w-max">
+                    <BracketPairing 
+                        parentIndex={0} 
+                        round={4} 
+                        bracket={bracketSlots} 
+                        currentMatchup={bracket.currentMatchup} 
+                        onPick={onPick} 
+                        onPlay={onPlay} 
+                    />
                     {bracketSlots[0] ? (
-                        <div className="w-[420px] bg-[#FFD952] border-[3px] border-black rounded-3xl p-8 shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] self-center">
+                        <div className="w-[420px] shrink-0 bg-[#FFD952] border-[3px] border-black rounded-3xl p-8 shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]">
                             <div className="text-4xl font-black text-black uppercase tracking-tight mb-4" style={{ fontStretch: 'condensed' }}>
                                 CHAMPION
                             </div>
@@ -80,7 +98,7 @@ export function BracketView() {
                             </div>
                         </div>
                     ) : (
-                        <div className="w-[420px] h-[200px] bg-[#FFD952] border-[3px] border-dashed border-black rounded-3xl flex flex-col items-center justify-center self-center">
+                        <div className="w-105 h-50 bg-[#FFD952] border-[3px] border-dashed border-black rounded-3xl flex flex-col items-center justify-center shrink-0">
                             <div className="text-black/40 font-black text-lg">AWAITING CHAMPION</div>
                         </div>
                     )}

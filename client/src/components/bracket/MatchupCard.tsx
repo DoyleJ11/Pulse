@@ -1,16 +1,18 @@
 import { Play } from 'lucide-react';
 import { type BracketSlot } from "./BracketView"
+import { PermissionGuard } from '../util/PermissionGuard';
 
 interface SongCardProps {
     song: BracketSlot | null,
     state: "empty" | "active" | "decided-winner" | "decided-loser" | "normal",
-    onPick?: () => void;
+    onPick?: (matchupIndex: number, winnerSongId: string) => void,
     onPlay?: () => void;
     seedColor?: string;
     size?: "base" | "quarter" | "semi" | "final";
+    parentIndex: number;
 }
 
-export function MatchupCard({ song, state, onPick, onPlay, size="base" }: SongCardProps) {
+export function MatchupCard({ song, state, onPick, onPlay, size="base", parentIndex }: SongCardProps) {
 
     const sizeClasses = {
         base: 'w-[364px]',
@@ -104,13 +106,15 @@ export function MatchupCard({ song, state, onPick, onPlay, size="base" }: SongCa
 
                 {/* Pick button for active state */}
                 {isActive && onPick && (
-                    <button
-                        onClick={onPick}
-                        className="w-full py-3 rounded-full border-[3px] border-black font-black text-sm hover:scale-[1.02] active:scale-[0.98] transition-all text-white uppercase"
-                        style={{ backgroundColor: getPickButtonBg() }}
-                    >
-                        PICK THIS SONG
-                    </button>
+                    <PermissionGuard allowedRoles={['judge']}>
+                        <button
+                            onClick={() => onPick(parentIndex, song.songId)}
+                            className="w-full py-3 rounded-full border-[3px] border-black font-black text-sm hover:scale-[1.02] active:scale-[0.98] transition-all text-white uppercase"
+                            style={{ backgroundColor: getPickButtonBg() }}
+                        >
+                            PICK THIS SONG
+                        </button>
+                     </PermissionGuard>
                 )}
             </div>
         </div>
