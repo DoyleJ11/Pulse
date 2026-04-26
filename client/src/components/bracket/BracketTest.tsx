@@ -1,6 +1,7 @@
 import { MatchupCard } from "./MatchupCard";
 import { type BracketSlot } from "./BracketView";
 import { Matchup } from "./Matchup";
+import { EndGameBtn } from "./EndGameBtn";
 
 const playerASongs: BracketSlot[] = [
   {
@@ -236,6 +237,7 @@ export function BracketTest() {
   return (
     <div className="min-h-screen bg-bg-cream p-8">
       <h1 className="text-4xl font-black mb-8">BRACKET COMPONENT TEST</h1>
+      <EndGameBtn />
 
       {/* Card States */}
       <section className="mb-12">
@@ -548,76 +550,6 @@ export function BracketTest() {
             />
           </div>
         </div>
-      </section>
-
-      {/* ===== BRACKET PAIRING TESTS ===== */}
-      <h1 className="text-4xl font-black mb-8 mt-16 pt-8 border-t-[3px] border-black">
-        BRACKET PAIRING TEST
-      </h1>
-
-      {/* Full bracket: fresh game, first matchup active */}
-      <section className="mb-12">
-        <h2 className="text-2xl font-black mb-2 uppercase">
-          Full Bracket — Fresh Game
-        </h2>
-        <p className="text-sm font-bold text-text-muted mb-4">
-          All 4 rounds rendered recursively. Round 1 filled, rounds 2-4 empty.
-          First matchup active. Champion awaiting.
-        </p>
-        <div className="border-[3px] border-dashed border-black/20 rounded-2xl p-6 bg-bg-cream overflow-auto">
-          <div className="flex flex-row items-center gap-12">
-            <BracketPairing
-              parentIndex={0}
-              round={4}
-              bracket={mockBracket}
-              currentMatchup={7}
-              onPick={() => console.log("Pick")}
-              onPlay={() => console.log("Play")}
-            />
-            <div className="w-[420px] h-[200px] bg-[#FFD952] border-[3px] border-dashed border-black rounded-3xl flex flex-col items-center justify-center flex-shrink-0">
-              <div className="text-black/40 font-black text-lg">
-                AWAITING CHAMPION
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Full bracket: mid-game state with some winners advanced */}
-      <section className="mb-12">
-        <h2 className="text-2xl font-black mb-2 uppercase">
-          Full Bracket — Mid-Game (3 Matchups Decided)
-        </h2>
-        <p className="text-sm font-bold text-text-muted mb-4">
-          First 3 matchups decided, 4th matchup active. Winners should appear in
-          Quarterfinals.
-        </p>
-        {(() => {
-          const midGameBracket = [...mockBracket];
-          midGameBracket[7] = allPlayerA[0];
-          midGameBracket[8] = allPlayerB[1];
-          midGameBracket[9] = allPlayerA[2];
-
-          return (
-            <div className="border-[3px] border-dashed border-black/20 rounded-2xl p-6 bg-bg-cream overflow-auto">
-              <div className="flex flex-row items-center gap-12">
-                <BracketPairing
-                  parentIndex={0}
-                  round={4}
-                  bracket={midGameBracket}
-                  currentMatchup={10}
-                  onPick={() => console.log("Pick")}
-                  onPlay={() => console.log("Play")}
-                />
-                <div className="w-[420px] h-[200px] bg-[#FFD952] border-[3px] border-dashed border-black rounded-3xl flex flex-col items-center justify-center flex-shrink-0">
-                  <div className="text-black/40 font-black text-lg">
-                    AWAITING CHAMPION
-                  </div>
-                </div>
-              </div>
-            </div>
-          );
-        })()}
       </section>
     </div>
   );

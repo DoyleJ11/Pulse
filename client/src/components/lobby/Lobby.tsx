@@ -4,12 +4,14 @@ import { useRoomStore } from "../../stores/roomStore";
 import { socket } from "../../utils/socket";
 import { startPicking } from "../../services/api";
 import { useNavigate } from "react-router";
+import { useTokenStore } from "../../stores/tokenStore";
+import { type Status } from "../../types/sharedTypes";
 
 function Lobby() {
   const navigate = useNavigate();
   const name = useAuthStore((state) => state.name);
   const role = useAuthStore((state) => state.role);
-  const token = useAuthStore((state) => state.token);
+  const token = useTokenStore((state) => state.token);
   const userId = useAuthStore((state) => state.userId);
   const playerList = useRoomStore((state) => state.players);
   const setPlayerList = useRoomStore((state) => state.setPlayers);
@@ -20,43 +22,29 @@ function Lobby() {
   const [errorMessage, setErrorMessage] = useState("");
 
   useEffect(() => {
-    if (lobbyCode && name && !socket.connected) {
-      socket.connect();
-      socket.emit("joinRoom", {
-        id: userId,
-        code: lobbyCode,
-        name: name,
-        token: token,
-        role: role,
-      });
-    }
-  }, [lobbyCode, name, token, role, userId]);
+    // roomState is handled globally in App.tsx — don't duplicate the listener here.
 
-  useEffect(() => {
-    socket.on("roomState", ({ users, hostId }) => {
-      setPlayerList(users);
-      setHostId(hostId)
-    });
-
-    socket.on("error", (errData) => {
+    const onError = (errData: { message: string }) => {
       setErrorMessage(errData.message);
-    });
+    };
 
-    socket.on("startPicking", ({ status }) => {
-      setStatus(status)
+    const onStartPicking = ({ status }: { status: Status }) => {
+      setStatus(status);
       navigate(`/lobby/${lobbyCode}/picking`);
-    })
+    };
+
+    socket.on("error", onError);
+    socket.on("startPicking", onStartPicking);
 
     return () => {
-      socket.off("roomState");
-      socket.off("error");
-      socket.off("startPicking")
+      socket.off("error", onError);
+      socket.off("startPicking", onStartPicking);
     };
-  }, [setPlayerList]);
+  }, [lobbyCode, navigate, setStatus]);
 
   const handleStartPicking = async () => {
     await startPicking(lobbyCode, token);
-  }
+  };
 
   return (
     <div>
@@ -73,14 +61,20 @@ function Lobby() {
             <ul className="text-xl font-semibold p-4">
               {playerList.map((player, index) => (
                 <li key={index}>
-                  {index + 1}. {player.name}: {player.role} {player.id === hostId ? "HOST" : ""} 
+                  {index + 1}. {player.name}: {player.role}{" "}
+                  {player.id === hostId ? "HOST" : ""}
                 </li>
               ))}
             </ul>
           )}
 
           {userId === hostId && (
-            <button className="border p-4 rounded-lg cursor-pointer" onClick={handleStartPicking}>Start Game</button>
+            <button
+              className="border p-4 rounded-lg cursor-pointer"
+              onClick={handleStartPicking}
+            >
+              Start Game
+            </button>
           )}
         </div>
       </div>

@@ -1,19 +1,22 @@
 import { type BracketSlot } from "./BracketView";
 import { PlayerChip } from "./PlayerChip";
+import { usePresence } from "../../hooks/usePresence";
+import type { Player } from "../../stores/roomStore";
 
 interface BracketHeaderProps {
   matchupSongs: [BracketSlot, BracketSlot] | null;
-  judgeName: string;
-  playerAName: string;
-  playerBName: string;
+  judge: Player;
+  playerA: Player;
+  playerB: Player;
 }
 
 export function BracketHeader({
   matchupSongs,
-  judgeName,
-  playerAName,
-  playerBName,
+  judge,
+  playerA,
+  playerB,
 }: BracketHeaderProps) {
+  const isSoftDisconnected = usePresence();
   return (
     <div className="px-10 pt-4 pb-8">
       <div className="max-w-[1600px] flex justify-between items-end gap-10 flex-wrap my-0 mx-auto">
@@ -22,13 +25,21 @@ export function BracketHeader({
             THE BRACKET
           </h1>
           <div className="flex items-center gap-3">
-            <PlayerChip role="player_a" name={playerAName} />
+            <PlayerChip
+              role="player_a"
+              name={playerA.name}
+              connected={!isSoftDisconnected(playerA.id)}
+            />
             <span className="text-text-primary/40 text-2xl my-0 mx-2.5 font-black tracking-tight">
               vs
             </span>
-            <PlayerChip role="player_b" name={playerBName} />
+            <PlayerChip
+              role="player_b"
+              name={playerB.name}
+              connected={!isSoftDisconnected(playerB.id)}
+            />
             <span className="text-xs font-bold tracking-widest text-text-primary/60 font-mono whitespace-nowrap">
-              · JUDGE: {judgeName}
+              · JUDGE: {judge.name}
             </span>
           </div>
         </div>
