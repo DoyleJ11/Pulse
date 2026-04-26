@@ -6,6 +6,8 @@ interface Player {
   id: string;
   name: string;
   role: string;
+  connected: boolean;
+  lastSeenAt: string;
 }
 
 interface RoomState {
@@ -33,7 +35,7 @@ const useRoomStore = create<RoomState>()(
     }),
     {
       name: "room-storage",
-      storage: createJSONStorage(() => sessionStorage),
+      storage: createJSONStorage(() => localStorage),
       partialize: (state) => ({
         code: state.code,
         players: state.players,

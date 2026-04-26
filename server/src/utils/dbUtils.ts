@@ -17,21 +17,29 @@ async function getAllUsers(code: string) {
   return { players: roomData.players, hostId: roomData.hostId };
 }
 
+// kept for potential kick logic
 async function removeUser(userId: string) {
   await prisma.player.delete({
     where: { id: userId },
   });
 }
 
+async function setPlayerConnected(userId: string, connected: boolean) {
+  await prisma.player.update({
+    where: { id: userId },
+    data: { connected: connected },
+  });
+}
+
 async function getUserRoleById(userId: string) {
   const user = await prisma.player.findUnique({
-    where: { id: userId }
+    where: { id: userId },
   });
   if (!user) {
     throw new Error(`Cannot find user with id: ${userId}`);
   }
 
-  return user.role
+  return user.role;
 }
 
-export { getAllUsers, removeUser, getUserRoleById };
+export { getAllUsers, removeUser, getUserRoleById, setPlayerConnected };

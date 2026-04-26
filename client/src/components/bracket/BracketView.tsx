@@ -9,6 +9,10 @@ import { Crown } from "lucide-react";
 import { Nav } from "../ui/Nav";
 import { BracketProgress } from "./BracketProgress";
 import { BracketHeader } from "./BracketHeader";
+import { EndGameBtn } from "./EndGameBtn";
+import { PermissionGuard } from "../util/PermissionGuard";
+import { usePresence } from "../../hooks/usePresence";
+import { useNavigate } from "react-router";
 
 interface Bracket {
   id: string;
@@ -64,11 +68,14 @@ const HEADERS = [
 ];
 
 export function BracketView() {
+  const navigate = useNavigate();
   const lobbyCode = useRoomStore((state) => state.code);
   const players = useRoomStore((state) => state.players);
   const playerA = players.find((p) => p.role === "player_a");
   const playerB = players.find((p) => p.role === "player_b");
   const judge = players.find((p) => p.role === "judge");
+  const isSoftDisconnected = usePresence();
+  const hasDisconnected = players.some((p) => isSoftDisconnected(p.id));
   const [bracket, setBracket] = useState<Bracket>({
     id: "",
     roomId: "",
@@ -92,11 +99,23 @@ export function BracketView() {
       console.log("Bracket complete!");
     });
 
+    const onConnect = () => {
+      getBracket();
+    };
+    socket.on("connect", onConnect);
+
+    const onRoomEnded = () => {
+      navigate(`/lobby/${lobbyCode}/postgame`);
+    };
+    socket.on("roomEnded", onRoomEnded);
+
     getBracket();
 
     return () => {
       socket.off("bracketUpdated");
       socket.off("bracketComplete");
+      socket.off("connect", onConnect);
+      socket.off("roomEnded", onRoomEnded);
     };
   }, []);
 
@@ -183,9 +202,9 @@ export function BracketView() {
       <Nav rightSlot={<BracketProgress decided={decidedCount} total={15} />} />
       <BracketHeader
         matchupSongs={matchupSongs}
-        judgeName={judge.name}
-        playerAName={playerA.name}
-        playerBName={playerB.name}
+        judge={judge}
+        playerA={playerA}
+        playerB={playerB}
       />
       <div className="m-6 p-4">
         <div className="overflow-x-auto">
@@ -336,6 +355,11 @@ export function BracketView() {
           </div>
         </div>
       </div>
+      {hasDisconnected && (
+        <PermissionGuard allowedRoles={["player_a", "player_b", "judge"]}>
+          <EndGameBtn />
+        </PermissionGuard>
+      )}
     </div>
   );
 }

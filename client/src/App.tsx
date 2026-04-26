@@ -6,30 +6,23 @@ import { useEffect } from "react";
 import { socket } from "./utils/socket";
 import { useRoomStore } from "./stores/roomStore";
 import { useAuthStore } from "./stores/authStore";
+import { useTokenStore } from "./stores/tokenStore";
 import { BracketView } from "./components/bracket/BracketView";
+import { BracketTest } from "./components/bracket/BracketTest";
+import { PostGame } from "./components/postgame/PostGame";
 
 function App() {
   const lobbyCode = useRoomStore((state) => state.code);
-  const token = useAuthStore((state) => state.token);
+  const setPlayers = useRoomStore((state) => state.setPlayers);
+  const setHostId = useRoomStore((state) => state.setHostId);
+  const token = useTokenStore((state) => state.token);
   const userId = useAuthStore((state) => state.userId);
   const name = useAuthStore((state) => state.name);
   const role = useAuthStore((state) => state.role);
 
   useEffect(() => {
-    if (lobbyCode && userId) {
-      socket.on("connect", () => {
-        socket.emit("joinRoom", {
-          id: userId,
-          code: lobbyCode,
-          name: name,
-          token: token,
-          role: role,
-        });
-      });
-
-      if (!socket.connected) {
-        socket.connect();
-      } else {
+    const onConnect = () => {
+      if (lobbyCode && userId) {
         socket.emit("joinRoom", {
           id: userId,
           code: lobbyCode,
@@ -38,12 +31,42 @@ function App() {
           role: role,
         });
       }
+    };
+
+    const onDisconnect = () => {
+      console.log(`user has disconnected: ${userId}`);
+    };
+
+    const onRoomState = ({
+      users,
+      hostId,
+    }: {
+      users: Parameters<typeof setPlayers>[0];
+      hostId: string;
+    }) => {
+      setPlayers(users);
+      setHostId(hostId);
+    };
+
+    socket.on("connect", onConnect);
+    socket.on("disconnect", onDisconnect);
+    socket.on("roomState", onRoomState);
+
+    if (lobbyCode && userId) {
+      if (!socket.connected) {
+        socket.connect();
+      } else {
+        // Already connected — fire joinRoom now (the connect listener won't fire again).
+        onConnect();
+      }
     }
 
     return () => {
-      socket.off("connect");
+      socket.off("connect", onConnect);
+      socket.off("disconnect", onDisconnect);
+      socket.off("roomState", onRoomState);
     };
-  }, []);
+  }, [lobbyCode, userId, name, token, role, setPlayers, setHostId]);
 
   return (
     <Routes>
@@ -51,6 +74,8 @@ function App() {
       <Route path="/lobby/:code" element={<Lobby />} />
       <Route path="/lobby/:code/picking" element={<PickingFilterPage />} />
       <Route path="/lobby/:code/bracket" element={<BracketView />} />
+      <Route path="/lobby/:code/postgame" element={<PostGame />} />
+      <Route path="/test" element={<BracketTest />} />
     </Routes>
   );
 }
