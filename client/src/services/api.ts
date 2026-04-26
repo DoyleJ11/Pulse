@@ -1,16 +1,30 @@
 import { z } from "zod";
-import { type Role, type Status, type SongSelection } from "../types/sharedTypes";
+import {
+  type Role,
+  type Status,
+  type SongSelection,
+} from "../types/sharedTypes";
 
 const RoomSchema = z.object({
   id: z.string(),
   code: z.string(),
   name: z.string(),
-  role: z.enum(["player_a", "player_b", "judge", "spectator"]) satisfies z.ZodType<Role>,
+  role: z.enum([
+    "player_a",
+    "player_b",
+    "judge",
+    "spectator",
+  ]) satisfies z.ZodType<Role>,
   jwt: z.string(),
 });
 
 const StatusSchema = z.object({
-  status: z.enum(["lobby", "picking", "battling", "complete"]) satisfies z.ZodType<Status>,
+  status: z.enum([
+    "lobby",
+    "picking",
+    "battling",
+    "complete",
+  ]) satisfies z.ZodType<Status>,
 });
 
 async function createRoom(name: string) {
@@ -28,7 +42,12 @@ async function joinRoom(name: string, code: string) {
 }
 
 async function startPicking(code: string, token: string) {
-  const response = await fetchHelper(`/api/rooms/${code}/startPicking`, "POST", undefined, token)
+  const response = await fetchHelper(
+    `/api/rooms/${code}/startPicking`,
+    "POST",
+    undefined,
+    token,
+  );
 
   return StatusSchema.parse(response);
 }
@@ -65,24 +84,35 @@ async function searchSong(query: string) {
 }
 
 const SongSchema = z.object({
-    id: z.string(),
-    title: z.string(),
-    artist: z.string(),
-    albumArt: z.string(),
-    deezerId: z.string(),
-    deezerRank: z.number(),
-    previewUrl: z.string().nullable(),
-    seed: z.number().nullable(),
-    provider: z.string(),
-    playerId: z.string(),
-})
+  id: z.string(),
+  title: z.string(),
+  artist: z.string(),
+  albumArt: z.string(),
+  duration: z.number(),
+  deezerId: z.string(),
+  deezerRank: z.number(),
+  previewUrl: z.string().nullable(),
+  seed: z.number().nullable(),
+  provider: z.string(),
+  playerId: z.string(),
+});
 
+const SongsSchema = z
+  .array(SongSchema)
+  .length(8, { message: "Must submit exactly 8 songs." });
 
-const SongsSchema = z.array(SongSchema).length(8, { message: "Must submit exactly 8 songs."})
-
-async function submitPicks(songs: SongSelection[], code: string, token: string) {
-  const body = {songs: songs}
-  const response = await fetchHelper(`/api/rooms/${code}/picks`, "POST", body, token)
+async function submitPicks(
+  songs: SongSelection[],
+  code: string,
+  token: string,
+) {
+  const body = { songs: songs };
+  const response = await fetchHelper(
+    `/api/rooms/${code}/picks`,
+    "POST",
+    body,
+    token,
+  );
 
   const data = SongsSchema.parse(await response);
   return data;
@@ -93,7 +123,7 @@ const BracketSchema = z.object({
   roomId: z.string(),
   state: z.array(z.unknown().nullable()),
   currentMatchup: z.number(),
-})
+});
 
 async function fetchBracket(code: string) {
   const response = await fetchHelper(`/api/rooms/${code}/bracket`, "GET");
@@ -102,14 +132,18 @@ async function fetchBracket(code: string) {
   return data;
 }
 
-
-async function fetchHelper(url: string, method: string, body?: object, token?: string) {
+async function fetchHelper(
+  url: string,
+  method: string,
+  body?: object,
+  token?: string,
+) {
   let headers: { [key: string]: string } = {
-    "Content-Type": "application/json"
-  }
+    "Content-Type": "application/json",
+  };
 
   if (token) {
-    headers["Authorization"] = `Bearer ${token}`
+    headers["Authorization"] = `Bearer ${token}`;
   }
 
   const response = await fetch(url, {
@@ -128,4 +162,11 @@ async function fetchHelper(url: string, method: string, body?: object, token?: s
   return data;
 }
 
-export { createRoom, joinRoom, searchSong, startPicking, submitPicks, fetchBracket };
+export {
+  createRoom,
+  joinRoom,
+  searchSong,
+  startPicking,
+  submitPicks,
+  fetchBracket,
+};

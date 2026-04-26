@@ -12,6 +12,7 @@ function slot(index: number) {
         artist: 'Test Artist',
         albumArt: '',
         previewUrl: null,
+        duration: 0,
         submittedBy: 'test-player',
         role: 'player_a',
         seed: 1,

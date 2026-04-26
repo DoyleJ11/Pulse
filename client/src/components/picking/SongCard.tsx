@@ -1,5 +1,6 @@
 import { type SongSelection } from "../../types/sharedTypes";
 import { X } from "lucide-react";
+import { formatDuration } from "../../utils/formatDuration";
 
 interface SongCardProps extends SongSelection {
   seed: number;
@@ -17,9 +18,9 @@ export function SongCard({
   seedColor,
   onRemove,
   preview,
+  duration,
   isLockedIn,
 }: SongCardProps) {
-
   return (
     <main
       className="bg-bg-card border-border-heavy rounded-card flex items-center gap-3 hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transition-shadow"
@@ -40,6 +41,9 @@ export function SongCard({
       <div className="flex-1 min-w-0">
         <p className="font-black text-text-primary truncate">{title}</p>
         <p className="font-medium text-text-secondary truncate">{artist}</p>
+        <p className="text-xs text-text-muted font-bold tabular-nums">
+          {formatDuration(duration)}
+        </p>
       </div>
 
       {/* Seed badge */}
@@ -57,7 +61,7 @@ export function SongCard({
       <button
         onClick={onRemove}
         disabled={isLockedIn}
-        className={`w-8 h-8 flex items-center justify-center ${isLockedIn ? 'cursor-not-allowed' : 'hover:scale-110 transition-transform active:scale-95 cursor-pointer'}`}
+        className={`w-8 h-8 flex items-center justify-center ${isLockedIn ? "cursor-not-allowed" : "hover:scale-110 transition-transform active:scale-95 cursor-pointer"}`}
         aria-label="Remove song"
       >
         <X className="w-6 h-6 text-text-primary" strokeWidth={3} />

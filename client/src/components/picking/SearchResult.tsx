@@ -1,5 +1,6 @@
 import { Plus } from "lucide-react";
 import { type DeezerSong } from "../../services/api";
+import { formatDuration } from "../../utils/formatDuration";
 
 interface SearchResultProps {
   song: DeezerSong;
@@ -8,12 +9,6 @@ interface SearchResultProps {
 }
 
 export function SearchResult({ song, onAdd, isLockedIn }: SearchResultProps) {
-  const formatDuration = (duration: number): string => {
-    const minutes = Math.floor(duration / 60);
-    const seconds = duration % 60;
-    return `${minutes}:${seconds.toString().padStart(2, "0")}`;
-  };
-
   return (
     <div className="flex items-center gap-3 py-3 group">
       <img

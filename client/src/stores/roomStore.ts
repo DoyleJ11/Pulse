@@ -11,7 +11,7 @@ interface Player {
 interface RoomState {
   hostId: string;
   code: string;
-  status: Status
+  status: Status;
   players: Player[];
   setCode: (code: string) => void;
   setPlayers: (players: Player[]) => void;
@@ -36,6 +36,7 @@ const useRoomStore = create<RoomState>()(
       storage: createJSONStorage(() => sessionStorage),
       partialize: (state) => ({
         code: state.code,
+        players: state.players,
       }),
     },
   ),

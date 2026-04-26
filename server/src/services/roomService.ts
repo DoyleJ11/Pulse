@@ -145,7 +145,7 @@ async function submitPicks(songs: Song[], user: Payload, code: string) {
     throw new Error(`Only players can submit songs.`)
   }
 
-  const createPromises = songs.map(song => 
+  const createPromises = songs.map(song =>
     prisma.song.create({
       data: {
         playerId: user.userId,
@@ -155,6 +155,7 @@ async function submitPicks(songs: Song[], user: Payload, code: string) {
         artist: song.artist,
         albumArt: song.albumArt,
         previewUrl: song.preview,
+        duration: song.duration,
         seed: null,
       },
     })

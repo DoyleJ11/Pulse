@@ -1,5 +1,6 @@
 import { type BracketSlot } from "./BracketView";
 import { MatchupCard } from "./MatchupCard";
+import { CARD_H, CARD_GAP, MATCHUP_H } from "./bracketLayout";
 
 interface MatchupProps {
   bracketSlots: (BracketSlot | null)[];
@@ -7,9 +8,6 @@ interface MatchupProps {
   parentIndex: number;
   currentMatchup: number | null;
   onPick: (matchupIndex: number, winnerSongId: string) => void;
-  size: "base" | "quarter" | "semi" | "final";
-  showOutgoingLine?: boolean;
-  showIncomingLine?: boolean;
 }
 
 export function Matchup({
@@ -18,9 +16,6 @@ export function Matchup({
   parentIndex,
   currentMatchup,
   onPick,
-  size = "base",
-  showOutgoingLine,
-  showIncomingLine,
 }: MatchupProps) {
   let stateA:
     | "active"
@@ -39,7 +34,6 @@ export function Matchup({
     if (!bracketSlots[0]) stateA = "empty";
     if (!bracketSlots[1]) stateB = "empty";
   } else if (winnerSlot) {
-    // Parent has a song -> this matchup is resolved
     stateA =
       winnerSlot.songId === bracketSlots[0].songId
         ? "decided-winner"
@@ -54,31 +48,45 @@ export function Matchup({
     stateA = stateB = "normal";
   }
 
-  return (
-    <div className="flex flex-row items-center">
-      {showIncomingLine && <div className="w-10 border-t-[3px] border-black" />}
+  const isActive = parentIndex === currentMatchup && stateA === "active";
 
-      <div className="flex flex-col items-start gap-2 w-max">
+  return (
+    <div className="relative w-full" style={{ height: MATCHUP_H }}>
+      {/* Card A — top */}
+      <div
+        className="absolute left-0 right-0"
+        style={{ top: 0, height: CARD_H }}
+      >
         <MatchupCard
           song={bracketSlots[0]}
           state={stateA}
-          size={size}
-          onPick={onPick}
-          parentIndex={parentIndex}
-        />
-        <div className="w-8 h-8 bg-black rounded-full flex self-center justify-center items-center border-[3px] border-black">
-          <span className="text-white font-black text-xs">VS</span>
-        </div>
-        <MatchupCard
-          song={bracketSlots[1]}
-          state={stateB}
-          size={size}
           onPick={onPick}
           parentIndex={parentIndex}
         />
       </div>
 
-      {showOutgoingLine && <div className="w-10 border-t-[3px] border-black" />}
+      {/* VS pill — only when not active (active matchup uses gap area for the pick button) */}
+      {!isActive && (
+        <div
+          className="absolute left-1/2 -translate-x-1/2 w-10 h-10 bg-black rounded-full flex justify-center items-center border-[3px] border-black"
+          style={{ top: CARD_H + (CARD_GAP - 32) / 2 }}
+        >
+          <span className="text-white font-black text-sm">VS</span>
+        </div>
+      )}
+
+      {/* Card B — bottom */}
+      <div
+        className="absolute left-0 right-0"
+        style={{ top: CARD_H + CARD_GAP, height: CARD_H }}
+      >
+        <MatchupCard
+          song={bracketSlots[1]}
+          state={stateB}
+          onPick={onPick}
+          parentIndex={parentIndex}
+        />
+      </div>
     </div>
   );
 }

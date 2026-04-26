@@ -44,6 +44,7 @@ model Song {
   artist     String
   albumArt   String // URL
   previewUrl String? // 30s clip, nullable
+  duration   Int // seconds, full-track length from Deezer
   seed       Int? // 1-8, for bracket positioning
   provider   String  @default("deezer")
 }

@@ -22,10 +22,21 @@ export function SongContainer({
   const emptySlots = maxSongs - selectedSongs.length;
   const isComplete = selectedSongs.length === maxSongs;
 
-  const seedColors = ["#2DD4BF", "#FF7B6B", "#C4B5FD", "#FFD952", "#6EE7B7"];
+  const seedColors = [
+    "#FFD952", // 1 — yellow
+    "#F59E0B", // 2 — amber
+    "#95e615", // 3 — lime
+    "#75a8fa", // 4 — sky blue
+    "#8183fc", // 5 — indigo
+    "#b164fa", // 6 — violet
+    "#e75bfc", // 7 — magenta
+    "#f55ba7", // 8 — pink
+  ];
 
   return (
-    <div className={`h-full flex flex-col rounded-3xl bg-section-golden p-6 ${isLockedIn ? 'opacity-50 pointer-events-none' : ''}`}>
+    <div
+      className={`h-full flex flex-col rounded-3xl bg-section-golden p-6 ${isLockedIn ? "opacity-50 pointer-events-none" : ""}`}
+    >
       <div className="mb-4">
         <h2
           className="text-5xl font-black uppercase tracking-tight"
@@ -48,7 +59,9 @@ export function SongContainer({
             albumArt={song.albumArt}
             preview={song.preview}
             seed={index + 1}
-            seedColor={seedColors[index % seedColors.length]}
+            seedColor={seedColors[index]}
+            duration={song.duration}
+            deezerRank={song.deezerRank}
             onRemove={() => onRemoveSong(song)}
             isLockedIn={isLockedIn}
           />
@@ -73,7 +86,7 @@ export function SongContainer({
         onClick={onLockIn}
       >
         {isLoading ? (
-            "LOADING..."
+          "LOADING..."
         ) : isLockedIn ? (
           <span className="flex items-center justify-center gap-2">
             <Lock className="w-6 h-6" strokeWidth={3} />

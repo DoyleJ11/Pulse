@@ -126,6 +126,16 @@
   --color-seed-6: var(--color-section-teal);
   --color-seed-7: var(--color-section-coral);
   --color-seed-8: var(--color-section-lavender);
+
+  /* ── Custom animations ──
+     Tailwind v4 generates animate-<name> utilities from --animate-* tokens.
+     Keyframes live inside @theme alongside the token. */
+  --animate-pulse-dot: pulse-dot 1.4s ease-in-out infinite;
+
+  @keyframes pulse-dot {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.35); }
+  }
 }
 
 body {
