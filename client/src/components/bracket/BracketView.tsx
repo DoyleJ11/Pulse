@@ -142,7 +142,6 @@ export function BracketView() {
 
   const onPick = (matchupIndex: number, winnerSongId: string) => {
     socket.emit("judgePick", {
-      code: lobbyCode,
       matchupIndex: matchupIndex,
       winnerSongId: winnerSongId,
     });

@@ -18,8 +18,6 @@ function App() {
   const setHostId = useRoomStore((state) => state.setHostId);
   const token = useTokenStore((state) => state.token);
   const userId = useAuthStore((state) => state.userId);
-  const name = useAuthStore((state) => state.name);
-  const role = useAuthStore((state) => state.role);
   const addToast = useToastStore((state) => state.addToast);
   const addError = useToastStore((state) => state.addError);
   const audioError = useAudioStore((state) => state.error);
@@ -40,11 +38,8 @@ function App() {
 
       if (lobbyCode && userId) {
         socket.emit("joinRoom", {
-          id: userId,
           code: lobbyCode,
-          name: name,
           token: token,
-          role: role,
         });
       }
     };
@@ -97,7 +92,7 @@ function App() {
       socket.off("error", onSocketError);
       socket.off("roomState", onRoomState);
     };
-  }, [lobbyCode, userId, name, token, role, setPlayers, setHostId, addToast, addError]);
+  }, [lobbyCode, userId, token, setPlayers, setHostId, addToast, addError]);
 
   return (
     <Routes>
