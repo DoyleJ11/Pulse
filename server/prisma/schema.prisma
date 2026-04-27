@@ -32,6 +32,8 @@ model Player {
   name   String
   role   String // player_a || player_b || judge || spectator
   songs  Song[]
+  connected   Boolean   @default(true)
+  lastSeenAt  DateTime  @default(now()) @updatedAt
 }
 
 model Song {

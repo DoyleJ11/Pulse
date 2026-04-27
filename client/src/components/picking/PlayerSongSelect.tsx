@@ -3,6 +3,7 @@ import { SongContainer } from "./SongContainer";
 import { useSongStore } from "../../stores/songStore";
 import { useRoomStore } from "../../stores/roomStore";
 import { useAuthStore } from "../../stores/authStore";
+import { useTokenStore } from "../../stores/tokenStore";
 import { submitPicks } from "../../services/api";
 import { useToastStore } from "../../stores/toastStore";
 import { useEffect, useState, useRef } from "react";
@@ -13,14 +14,14 @@ export function PlayerSongSelect() {
   const selectedSongs = useSongStore((state) => state.selectedSongs);
   const removeSong = useSongStore((state) => state.removeSong);
   const addSong = useSongStore((state) => state.addSong);
-  const setLockIn = useSongStore((state) => state.setLockIn)
-  const isLockedIn = useSongStore((state) => state.isLockedIn)
+  const setLockIn = useSongStore((state) => state.setLockIn);
+  const isLockedIn = useSongStore((state) => state.isLockedIn);
   const roomCode = useRoomStore((state) => state.code);
-  const userId = useAuthStore((state) => state.userId)
-  const name = useAuthStore((state) => state.name)
-  const role = useAuthStore((state) => state.role)
-  const token = useAuthStore((state) => state.token);
-  const [isLoading, setIsLoading] = useState(false)
+  const userId = useAuthStore((state) => state.userId);
+  const name = useAuthStore((state) => state.name);
+  const role = useAuthStore((state) => state.role);
+  const token = useTokenStore((state) => state.token);
+  const [isLoading, setIsLoading] = useState(false);
   const pickRef = useRef({
     songCount: selectedSongs.length,
     code: roomCode,
@@ -28,7 +29,7 @@ export function PlayerSongSelect() {
     name: name,
     role: role,
     isLockedIn: isLockedIn,
-  })
+  });
 
   useEffect(() => {
     pickRef.current = {
@@ -38,7 +39,7 @@ export function PlayerSongSelect() {
       name: name,
       role: role,
       isLockedIn: isLockedIn,
-    }
+    };
 
     socket.emit("pickUpdate", {
       songCount: selectedSongs.length,
@@ -47,8 +48,8 @@ export function PlayerSongSelect() {
       name: name,
       role: role,
       lockedIn: isLockedIn,
-    })
-  }, [selectedSongs.length, isLockedIn])
+    });
+  }, [selectedSongs.length, isLockedIn]);
 
   useEffect(() => {
     socket.on("roomState", () => {
@@ -59,24 +60,26 @@ export function PlayerSongSelect() {
         name: pickRef.current.name,
         role: pickRef.current.role,
         lockedIn: pickRef.current.isLockedIn,
-      })
-    })
+      });
+    });
 
     return () => {
-      socket.off("roomState")
-    }
-  }, [])
+      socket.off("roomState");
+    };
+  }, []);
 
   const onLockIn = async () => {
-    setIsLoading(true)
+    setIsLoading(true);
     try {
-        await submitPicks(selectedSongs, roomCode, token)
-        setLockIn(true)
-        setIsLoading(false)
+      await submitPicks(selectedSongs, roomCode, token);
+      setLockIn(true);
+      setIsLoading(false);
     } catch (err) {
-        console.error("Error locking in: ", err)
-        setIsLoading(false)
-        useToastStore.getState().addToast("Error locking in. Please try again.", "error")
+      console.error("Error locking in: ", err);
+      setIsLoading(false);
+      useToastStore
+        .getState()
+        .addToast("Error locking in. Please try again.", "error");
     }
   };
 
