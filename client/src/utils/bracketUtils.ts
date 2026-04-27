@@ -3,7 +3,7 @@ function getMatchups(round: number) {
     const count = 2**(4 - round) // Number of pairs
     const pairArr = []
     for (let i = 0; i < count; i++) {
-        let numPair = [start + i * 2, start + i * 2 + 1];
+        const numPair = [start + i * 2, start + i * 2 + 1];
         pairArr.push(numPair);
     }
 

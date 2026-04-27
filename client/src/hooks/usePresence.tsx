@@ -23,9 +23,12 @@ export function usePresence() {
         timeouts.set(player.id, t);
       } else {
         // Connected → clear any prior soft-disconnected flag immediately.
-        setSoftDisconnected((prev) =>
-          prev[player.id] ? { ...prev, [player.id]: false } : prev,
-        );
+        const t = setTimeout(() => {
+          setSoftDisconnected((prev) =>
+            prev[player.id] ? { ...prev, [player.id]: false } : prev,
+          );
+        }, 0);
+        timeouts.set(player.id, t);
       }
     }
 

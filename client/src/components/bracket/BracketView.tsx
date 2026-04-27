@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { fetchBracket } from "../../services/api";
 import { useRoomStore } from "../../stores/roomStore";
 import { socket } from "../../utils/socket";
@@ -14,6 +14,7 @@ import { ViewChampionBtn } from "./ViewChampionBtn";
 import { PermissionGuard } from "../util/PermissionGuard";
 import { usePresence } from "../../hooks/usePresence";
 import { useNavigate } from "react-router";
+import { useToastStore } from "../../stores/toastStore";
 
 interface Bracket {
   id: string;
@@ -87,12 +88,24 @@ export function BracketView() {
     currentMatchup: 7,
   });
   const [bracketSlots, setBracketSlots] = useState<(BracketSlot | null)[]>([]);
+  const addError = useToastStore((state) => state.addError);
 
   const stop = useAudioStore((s) => s.stop);
 
   useEffect(() => {
     return () => stop();
   }, [stop]);
+
+  const getBracket = useCallback(async () => {
+    try {
+      const resultBracket = await fetchBracket(lobbyCode);
+      setBracket(resultBracket);
+      const bracketState = resultBracket.state as (BracketSlot | null)[];
+      setBracketSlots(bracketState);
+    } catch (error) {
+      addError(error, "Could not load the bracket. Please refresh and try again.");
+    }
+  }, [lobbyCode, addError]);
 
   useEffect(() => {
     socket.on("bracketUpdated", ({ state, currentMatchup }) => {
@@ -114,22 +127,18 @@ export function BracketView() {
     };
     socket.on("roomEnded", onRoomEnded);
 
-    getBracket();
+    const initialFetch = setTimeout(() => {
+      void getBracket();
+    }, 0);
 
     return () => {
+      clearTimeout(initialFetch);
       socket.off("bracketUpdated");
       socket.off("bracketComplete");
       socket.off("connect", onConnect);
       socket.off("roomEnded", onRoomEnded);
     };
-  }, []);
-
-  const getBracket = async () => {
-    const resultBracket = await fetchBracket(lobbyCode);
-    setBracket(resultBracket);
-    const bracketState = resultBracket.state as (BracketSlot | null)[];
-    setBracketSlots(bracketState);
-  };
+  }, [getBracket, lobbyCode, navigate]);
 
   const onPick = (matchupIndex: number, winnerSongId: string) => {
     socket.emit("judgePick", {

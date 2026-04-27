@@ -11,7 +11,25 @@ interface Toast {
 interface ToastStore {
     toasts: Toast[];
     addToast: (message: string, type?: ToastType) => void;
+    addError: (error: unknown, fallback?: string) => void;
     removeToast: (id: string) => void;
+}
+
+function getErrorMessage(error: unknown, fallback = "Something went wrong. Please try again.") {
+    if (error instanceof Error && error.message) {
+        return error.message;
+    }
+
+    if (
+        typeof error === "object" &&
+        error !== null &&
+        "message" in error &&
+        typeof error.message === "string"
+    ) {
+        return error.message;
+    }
+
+    return fallback;
 }
 
 export const useToastStore = create<ToastStore>((set) => ({
@@ -29,7 +47,13 @@ export const useToastStore = create<ToastStore>((set) => ({
             }));
         }, 3000);
     },
+    addError: (error, fallback) => {
+        const message = getErrorMessage(error, fallback);
+        useToastStore.getState().addToast(message, "error");
+    },
     removeToast: (id) => set((state) => ({
         toasts: state.toasts.filter((t) => t.id !== id),
     })),
 }));
+
+export { getErrorMessage };

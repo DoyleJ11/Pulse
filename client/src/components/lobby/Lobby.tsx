@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { useAuthStore } from "../../stores/authStore";
 import { useRoomStore } from "../../stores/roomStore";
 import { socket } from "../../utils/socket";
@@ -6,6 +6,7 @@ import { startPicking } from "../../services/api";
 import { useNavigate } from "react-router";
 import { useTokenStore } from "../../stores/tokenStore";
 import { type Status } from "../../types/sharedTypes";
+import { useToastStore } from "../../stores/toastStore";
 
 function Lobby() {
   const navigate = useNavigate();
@@ -17,39 +18,34 @@ function Lobby() {
   const hostId = useRoomStore((state) => state.hostId);
   const setStatus = useRoomStore((state) => state.setStatus);
   const lobbyCode = useRoomStore((state) => state.code);
-  const [errorMessage, setErrorMessage] = useState("");
+  const addError = useToastStore((state) => state.addError);
 
   useEffect(() => {
     // roomState is handled globally in App.tsx — don't duplicate the listener here.
-
-    const onError = (errData: { message: string }) => {
-      setErrorMessage(errData.message);
-    };
 
     const onStartPicking = ({ status }: { status: Status }) => {
       setStatus(status);
       navigate(`/lobby/${lobbyCode}/picking`);
     };
 
-    socket.on("error", onError);
     socket.on("startPicking", onStartPicking);
 
     return () => {
-      socket.off("error", onError);
       socket.off("startPicking", onStartPicking);
     };
   }, [lobbyCode, navigate, setStatus]);
 
   const handleStartPicking = async () => {
-    await startPicking(lobbyCode, token);
+    try {
+      await startPicking(lobbyCode, token);
+    } catch (error) {
+      addError(error, "Could not start the game. Please try again.");
+    }
   };
 
   return (
     <div>
       <div className="h-screen flex flex-col justify-center items-center gap-4">
-        {errorMessage && (
-          <h1 className="text-2xl font-bold text-red-400">{errorMessage}</h1>
-        )}
         <h1 className="text-3xl font-bold text-slate-600">{lobbyCode}</h1>
         <h1 className="text-3xl font-bold text-slate-600">{name}</h1>
         <h1 className="text-2xl font-bold text-slate-500">{role}</h1>

@@ -138,7 +138,7 @@ async function fetchHelper(
   body?: object,
   token?: string,
 ) {
-  let headers: { [key: string]: string } = {
+  const headers: { [key: string]: string } = {
     "Content-Type": "application/json",
   };
 
@@ -146,20 +146,50 @@ async function fetchHelper(
     headers["Authorization"] = `Bearer ${token}`;
   }
 
-  const response = await fetch(url, {
-    method: method,
-    headers: headers,
-    body: JSON.stringify(body),
-  });
+  let response: Response;
+  try {
+    response = await fetch(url, {
+      method: method,
+      headers: headers,
+      body: JSON.stringify(body),
+    });
+  } catch {
+    throw new Error("Could not reach the server. Check your connection and try again.");
+  }
 
   if (!response.ok) {
     const errorBody = await response.json().catch(() => null);
-    console.error("Error response:", errorBody);
-    throw new Error(`HTTP error. status: ${response.status}`);
+    throw new Error(getApiErrorMessage(errorBody, response.status));
   }
 
   const data = await response.json();
   return data;
+}
+
+function getApiErrorMessage(errorBody: unknown, status: number) {
+  if (
+    typeof errorBody === "object" &&
+    errorBody !== null &&
+    "message" in errorBody &&
+    typeof errorBody.message === "string"
+  ) {
+    return errorBody.message;
+  }
+
+  if (
+    typeof errorBody === "object" &&
+    errorBody !== null &&
+    "issues" in errorBody &&
+    Array.isArray(errorBody.issues) &&
+    errorBody.issues.length > 0
+  ) {
+    const firstIssue = errorBody.issues[0] as { message?: unknown };
+    if (typeof firstIssue.message === "string") {
+      return firstIssue.message;
+    }
+  }
+
+  return `Request failed with status ${status}. Please try again.`;
 }
 
 export {

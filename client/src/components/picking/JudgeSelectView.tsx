@@ -35,7 +35,7 @@ export function JudgeSelectView({code, theme}: JudgeViewProps) {
                 } else if (role == "player_b") {
                     setPlayerB({songCount: songCount, userId: userId, name: name, role: role, lockedIn: lockedIn})
                 }
-            } catch (error) {
+            } catch {
                 console.error("Failed to update player info on pickUpdate")
             }
         })
