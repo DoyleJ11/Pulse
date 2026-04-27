@@ -46,7 +46,7 @@ export function SearchContainer({
 
   return (
     <div
-      className={`h-full flex flex-col rounded-3xl bg-section-coral p-6 ${isLockedIn ? "opacity-50 pointer-events-none" : ""}`}
+      className={`h-full flex flex-col rounded-3xl bg-section-coral p-6 border-text-primary border-4 ${isLockedIn ? "opacity-50 pointer-events-none" : ""}`}
     >
       {/* Search input */}
       <div className="relative mb-4">

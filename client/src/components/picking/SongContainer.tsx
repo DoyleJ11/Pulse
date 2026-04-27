@@ -35,7 +35,7 @@ export function SongContainer({
 
   return (
     <div
-      className={`h-full flex flex-col rounded-3xl bg-section-golden p-6 ${isLockedIn ? "opacity-50 pointer-events-none" : ""}`}
+      className={`h-full flex flex-col rounded-3xl bg-section-golden p-6 border-text-primary border-4 ${isLockedIn ? "opacity-50 pointer-events-none" : ""}`}
     >
       <div className="mb-4">
         <h2

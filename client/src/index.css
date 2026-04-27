@@ -13,32 +13,32 @@
      cream:      the base page color (warm off-white)
      card:       white cards that sit on top of cream
      These replace the old dark-mode surface-* tokens. */
-  --color-bg-cream: #FAF7F2;
-  --color-bg-card: #FFF9F0;
+  --color-bg-cream: #faf7f2;
+  --color-bg-card: #fff9f0;
 
   /* ── Section colors (color blocking) ──
      These are the bold background fills for major UI panels.
      Each panel "owns" a color — search is coral, picks is golden, etc.
      The -deep variant is for progress bar fills and hover states. */
-  --color-section-coral: #FF7B6B;
-  --color-section-coral-deep: #FF6B58;
-  --color-section-golden: #FFD952;
-  --color-section-golden-deep: #F5C842;
-  --color-section-teal: #2DD4BF;
-  --color-section-teal-deep: #14B8A6;
-  --color-section-lavender: #C4B5FD;
-  --color-section-lavender-deep: #A78BFA;
-  --color-section-mint: #6EE7B7;
-  --color-section-mint-deep: #34D399;
+  --color-section-coral: #ff7b6b;
+  --color-section-coral-deep: #ff6b58;
+  --color-section-golden: #ffd952;
+  --color-section-golden-deep: #f5c842;
+  --color-section-teal: #2dd4bf;
+  --color-section-teal-deep: #14b8a6;
+  --color-section-lavender: #c4b5fd;
+  --color-section-lavender-deep: #a78bfa;
+  --color-section-mint: #6ee7b7;
+  --color-section-mint-deep: #34d399;
 
   /* ── Text ──
      On this light theme, text is black at various opacities.
      Using named tokens instead of text-black/70 everywhere means
      we can tune the hierarchy from one place. */
-  --color-text-primary: #0A0A0A;
+  --color-text-primary: #0a0a0a;
   --color-text-secondary: rgba(0, 0, 0, 0.7);
   --color-text-muted: rgba(0, 0, 0, 0.4);
-  --color-text-on-dark: #FFF9F0;
+  --color-text-on-dark: #fff9f0;
 
   /* ── Borders ──
      The bold 3px black borders are the signature of this design.
@@ -76,12 +76,12 @@
      Based on a 4px grid (standard in most design systems).
      Figma Make used p-4, p-6, p-8 — which map to 16/24/32px.
      These tokens let you reference the intent, not the number. */
-  --space-xs: 0.25rem;   /* 4px  — tight gaps (icon-to-text) */
-  --space-sm: 0.5rem;    /* 8px  — compact spacing */
-  --space-md: 1rem;      /* 16px — default card padding */
-  --space-lg: 1.5rem;    /* 24px — panel padding */
-  --space-xl: 2rem;      /* 32px — section padding, page margins */
-  --space-2xl: 3rem;     /* 48px — major section gaps */
+  --space-xs: 0.25rem; /* 4px  — tight gaps (icon-to-text) */
+  --space-sm: 0.5rem; /* 8px  — compact spacing */
+  --space-md: 1rem; /* 16px — default card padding */
+  --space-lg: 1.5rem; /* 24px — panel padding */
+  --space-xl: 2rem; /* 32px — section padding, page margins */
+  --space-2xl: 3rem; /* 48px — major section gaps */
 
   /* ── Shadows ──
      The "neo-brutalist" offset shadows are a signature of this design.
@@ -99,10 +99,10 @@
      Medium (500) for body. This is what gives it the "bold/playful" feel.
      Tailwind's font-black, font-bold, font-medium map to these. */
   --font-family-base: "Inter", system-ui, -apple-system, sans-serif;
-  --font-size-hero: 4.5rem;   /* 72px — the "PULSE" title */
-  --font-size-section: 3rem;  /* 48px — "YOUR PICKS" panel headers */
+  --font-size-hero: 4.5rem; /* 72px — the "PULSE" title */
+  --font-size-section: 3rem; /* 48px — "YOUR PICKS" panel headers */
   --font-size-heading: 1.5rem; /* 24px — counter pills, large numbers */
-  --font-size-body: 1rem;     /* 16px — song titles, labels */
+  --font-size-body: 1rem; /* 16px — song titles, labels */
   --font-size-caption: 0.875rem; /* 14px — artist names, durations */
   --font-size-micro: 0.75rem; /* 12px — role labels, fine print */
 
@@ -133,8 +133,37 @@
   --animate-pulse-dot: pulse-dot 1.4s ease-in-out infinite;
 
   @keyframes pulse-dot {
-    0%, 100% { transform: scale(1); }
-    50% { transform: scale(1.35); }
+    0%,
+    100% {
+      transform: scale(1);
+    }
+    50% {
+      transform: scale(1.35);
+    }
+  }
+}
+
+/* Waveform bar — each bar sets --bar-min and --bar-max inline so this single
+   keyframe produces a different height range per bar. Pair with
+   `animation-direction: alternate` for the rise-and-fall effect.
+   Lives outside @theme because Tailwind v4 only registers keyframes inside
+   @theme when they're paired with a matching --animate-* token. */
+@keyframes wave-bar {
+  from {
+    height: var(--bar-min, 3px);
+  }
+  to {
+    height: var(--bar-max, 24px);
+  }
+}
+
+@layer utilities {
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  .no-scrollbar {
+    -ms-overflow-style: none; /* IE and Edge */
+    scrollbar-width: none; /* Firefox */
   }
 }
 

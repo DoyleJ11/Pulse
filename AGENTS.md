@@ -1,4 +1,4 @@
-# Pulse — CLAUDE.md
+# Pulse — AGENTS.md
 
 ## About Me
 

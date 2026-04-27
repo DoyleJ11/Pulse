@@ -30,7 +30,9 @@ const useSongStore = create<SongStore>()(
                 set((state) => ({ selectedSongs:[...state.selectedSongs, song]}))
             },
             removeSong: (songToRemove: SongSelection) => set((state) => ({ selectedSongs: state.selectedSongs.filter((song) => song.deezerId !== songToRemove.deezerId)})),
-            clearSongs: () => set({ selectedSongs: []})
+            // Full reset — wipe selectedSongs AND isLockedIn together so a fresh
+            // game can't inherit a stale "locked in" flag from a prior session.
+            clearSongs: () => set({ selectedSongs: [], isLockedIn: false })
         }),
         {
             name: "song-storage",

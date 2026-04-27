@@ -1,13 +1,19 @@
 import { type ReactNode } from "react";
+import { useNavigate } from "react-router";
+import { Waveform } from "./Waveform";
 
 export function Nav({ rightSlot }: { rightSlot?: ReactNode }) {
+  const navigate = useNavigate();
   return (
     <div className="flex justify-between items-center relative z-10 px-10 py-6">
-      <div className="text-2xl font-black tracking-tighter flex items-end cursor-pointer gap-2.5">
-        {/* Waveform animation */}
-        <span>wave</span>
+      <button
+        onClick={() => navigate("/")}
+        className="text-2xl font-black tracking-tighter flex items-baseline cursor-pointer gap-1 bg-transparent border-0 p-0"
+        aria-label="Pulse — return home"
+      >
+        <Waveform />
         <span className="uppercase">PULSE</span>
-      </div>
+      </button>
       {rightSlot ? rightSlot : ""}
     </div>
   );

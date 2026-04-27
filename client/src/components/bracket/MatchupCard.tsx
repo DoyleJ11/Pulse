@@ -27,16 +27,6 @@ export function MatchupCard({
     final: "w-[473px]",
   };
 
-  const seedColors = [
-    "#FFD952", // 1 — yellow
-    "#F59E0B", // 2 — amber
-    "#95e615", // 3 — lime
-    "#75a8fa", // 4 — sky blue
-    "#8183fc", // 5 — indigo
-    "#b164fa", // 6 — violet
-    "#e75bfc", // 7 — magenta
-    "#f55ba7", // 8 — pink
-  ];
   const { toggle, isPlayingSong, isLoading } = useAudioPlayer();
   const isThisPlaying = song ? isPlayingSong(song.songId) : false;
   const isThisLoading = isLoading && isThisPlaying;
@@ -54,9 +44,8 @@ export function MatchupCard({
   }
 
   const isActive = state === "active";
-  const isDecided = state === "decided-winner" || state === "decided-loser";
   const isLoser = state === "decided-loser";
-  const opacity = isDecided ? "opacity-60" : "";
+  const isWinner = state === "decided-winner";
 
   const getPlayerColor = () => {
     if (song.role === "player_a") {
@@ -68,7 +57,7 @@ export function MatchupCard({
 
   return (
     <div
-      className={`${sizeClasses[size]} ${opacity} relative transition-all duration-300`}
+      className={`${sizeClasses[size]} ${isLoser ? "opacity-60" : ""} relative transition-all duration-300`}
       style={{ height: CARD_H }}
     >
       {/* Loser X badge — lives on the outer wrapper so it escapes the inner card's overflow-hidden */}
@@ -84,6 +73,7 @@ export function MatchupCard({
             ? "shadow-[3px_3px_0px_0px_#0A0A0A]"
             : "shadow-[2px_2px_0px_0px_rgba(0,0,0,0.3)]"
         }`}
+        style={{ backgroundColor: isWinner ? getPlayerColor() : "#fff" }}
       >
         <div className="flex h-full">
           {/* A/B player strip */}
@@ -148,18 +138,6 @@ export function MatchupCard({
                 </span>
               </div>
             </div>
-
-            {/* Seed badge */}
-            <div className="shrink-0">
-              <div
-                className="w-9 h-9 rounded-full border-[3px] border-black flex items-center justify-center font-black text-black text-sm"
-                style={{
-                  backgroundColor: seedColors[song.seed - 1],
-                }}
-              >
-                {song.seed}
-              </div>
-            </div>
           </div>
         </div>
       </div>
@@ -170,30 +148,12 @@ export function MatchupCard({
           <button
             onClick={() => onPick(parentIndex, song.songId)}
             aria-label={`Pick ${song.title}`}
-            className={`group absolute rounded-2xl mx-auto left-0 right-0 top-full mt-2 z-10 grid grid-cols-[auto_1fr_auto] items-center gap-2.5 bg-[#FFD952] text-black border-2 border-black px-3 py-2 uppercase cursor-pointer shadow-[4px_4px_0_#0A0A0A] transition-[transform,box-shadow,background-color] duration-[120ms] ease-in-out hover:translate-x-[-1px] hover:translate-y-[-1px] hover:shadow-[5px_5px_0_#0A0A0A] active:translate-x-[3px] active:translate-y-[3px] active:shadow-[1px_1px_0_#0A0A0A] ${
+            className={`group absolute rounded-2xl mx-auto left-0 right-0 top-full mt-2 z-10 flex justify-between items-center gap-2.5 bg-[#FFD952] text-black border-2 border-black px-3 py-2 uppercase cursor-pointer shadow-[4px_4px_0_#0A0A0A] transition-[transform,box-shadow,background-color] duration-[120ms] ease-in-out hover:translate-x-[-1px] hover:translate-y-[-1px] hover:shadow-[5px_5px_0_#0A0A0A] active:translate-x-[3px] active:translate-y-[3px] active:shadow-[1px_1px_0_#0A0A0A] ${
               song.role === "player_a"
                 ? "hover:bg-[#FF7B6B]"
                 : "hover:bg-[#2DD4BF]"
             }`}
           >
-            <span
-              className={`w-[22px] h-[22px] inline-flex items-center justify-center bg-black text-[#FFD952] border-[1.5px] border-black ${
-                song.role === "player_a"
-                  ? "group-hover:text-[#FF7B6B]"
-                  : "group-hover:text-[#2DD4BF]"
-              }`}
-              aria-hidden="true"
-            >
-              <svg viewBox="0 0 24 24" width="14" height="14">
-                <path
-                  d="M5 12l5 5L20 7"
-                  stroke="currentColor"
-                  strokeWidth="3"
-                  fill="none"
-                  strokeLinecap="square"
-                />
-              </svg>
-            </span>
             <span className="text-xs font-black tracking-[0.18em] text-left">
               PICK THIS SONG
             </span>

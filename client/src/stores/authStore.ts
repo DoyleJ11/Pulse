@@ -7,6 +7,9 @@ interface AuthState {
   role: Role;
   userId: string;
   setAuth: (newName: string, newRole: Role, newUserId: string) => void;
+  // Clears role + userId but preserves the user's display name so the
+  // landing page can autofill it next time.
+  clearSession: () => void;
 }
 
 const useAuthStore = create<AuthState>()(
@@ -22,6 +25,7 @@ const useAuthStore = create<AuthState>()(
           role: newRole,
           userId: newUserId,
         }),
+      clearSession: () => set({ role: null, userId: "" }),
     }),
     {
       name: "auth-storage",
