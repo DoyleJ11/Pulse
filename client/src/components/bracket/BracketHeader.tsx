@@ -24,7 +24,7 @@ export function BracketHeader({
           <h1 className="text-[clamp(48px,6vw,88px)] m-0 uppercase font-black whitespace-nowrap">
             THE BRACKET
           </h1>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 ml-4">
             <PlayerChip
               role="player_a"
               name={playerA.name}

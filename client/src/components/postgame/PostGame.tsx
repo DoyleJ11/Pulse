@@ -5,6 +5,7 @@ import { fetchBracket } from "../../services/api";
 import { useRoomStore } from "../../stores/roomStore";
 import { useAuthStore } from "../../stores/authStore";
 import { useTokenStore } from "../../stores/tokenStore";
+import { useSongStore } from "../../stores/songStore";
 import { socket } from "../../utils/socket";
 import { type BracketSlot } from "../bracket/BracketView";
 import { formatDuration } from "../../utils/formatDuration";
@@ -16,6 +17,7 @@ export function PostGame() {
   const clearRoom = useRoomStore((state) => state.clearRoom);
   const clearSession = useAuthStore((state) => state.clearSession);
   const clearToken = useTokenStore((state) => state.clearToken);
+  const clearSongs = useSongStore((state) => state.clearSongs);
 
   const [bracketSlots, setBracketSlots] = useState<(BracketSlot | null)[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -55,6 +57,7 @@ export function PostGame() {
     clearSession();
     clearRoom();
     clearToken();
+    clearSongs();
     navigate("/");
   };
 
