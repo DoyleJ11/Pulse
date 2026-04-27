@@ -5,6 +5,7 @@ import { type SongSelection } from "../../types/sharedTypes";
 import { useEffect, useState } from "react";
 import { Search } from "lucide-react";
 import { SearchResult } from "./SearchResult";
+import { useToastStore } from "../../stores/toastStore";
 
 interface SearchContainerProps {
   onAddSong: (song: SongSelection) => void;
@@ -17,18 +18,36 @@ export function SearchContainer({
 }: SearchContainerProps) {
   const [results, setResults] = useState<DeezerSong[]>([]);
   const [query, setQuery] = useState("");
+  const addError = useToastStore((state) => state.addError);
   const debouncedQuery = useDebounce(query, 300);
 
   useEffect(() => {
-    if (debouncedQuery) {
-      (async () => {
+    if (!debouncedQuery) return;
+
+    let cancelled = false;
+    (async () => {
+      try {
         const searchResults: DeezerSong[] = await searchSong(debouncedQuery);
-        setResults(searchResults);
-      })();
-    } else {
+        if (!cancelled) setResults(searchResults);
+      } catch (error) {
+        if (!cancelled) {
+          setResults([]);
+          addError(error, "Could not search songs. Please try again.");
+        }
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [debouncedQuery, addError]);
+
+  const handleQueryChange = (value: string) => {
+    setQuery(value);
+    if (!value) {
       setResults([]);
     }
-  }, [debouncedQuery]);
+  };
 
   const selectSong = (result: DeezerSong): void => {
     const song: SongSelection = {
@@ -55,7 +74,7 @@ export function SearchContainer({
           placeholder="Search for a song..."
           disabled={isLockedIn}
           value={query}
-          onChange={(e) => setQuery(e.target.value)}
+          onChange={(e) => handleQueryChange(e.target.value)}
           className="w-full px-5 py-4 pl-14 rounded-pill bg-bg-card text-text-primary
                      placeholder:text-text-muted font-bold border-border-heavy
                      focus:outline-none focus:ring-4 focus:ring-black/20"

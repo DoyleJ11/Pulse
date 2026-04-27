@@ -75,11 +75,10 @@ export function PlayerSongSelect() {
       setLockIn(true);
       setIsLoading(false);
     } catch (err) {
-      console.error("Error locking in: ", err);
       setIsLoading(false);
       useToastStore
         .getState()
-        .addToast("Error locking in. Please try again.", "error");
+        .addError(err, "Error locking in. Please try again.");
     }
   };
 

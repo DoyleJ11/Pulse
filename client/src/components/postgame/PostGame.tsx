@@ -6,6 +6,7 @@ import { useRoomStore } from "../../stores/roomStore";
 import { useAuthStore } from "../../stores/authStore";
 import { useTokenStore } from "../../stores/tokenStore";
 import { useSongStore } from "../../stores/songStore";
+import { useToastStore } from "../../stores/toastStore";
 import { socket } from "../../utils/socket";
 import { type BracketSlot } from "../bracket/BracketView";
 import { formatDuration } from "../../utils/formatDuration";
@@ -18,6 +19,7 @@ export function PostGame() {
   const clearSession = useAuthStore((state) => state.clearSession);
   const clearToken = useTokenStore((state) => state.clearToken);
   const clearSongs = useSongStore((state) => state.clearSongs);
+  const addError = useToastStore((state) => state.addError);
 
   const [bracketSlots, setBracketSlots] = useState<(BracketSlot | null)[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -34,7 +36,9 @@ export function PostGame() {
         if (cancelled) return;
         setBracketSlots(result.state as (BracketSlot | null)[]);
       } catch (err) {
-        console.error("Failed to fetch bracket for post-game", err);
+        if (!cancelled) {
+          addError(err, "Could not load the post-game summary.");
+        }
       } finally {
         if (!cancelled) setIsLoading(false);
       }
@@ -42,7 +46,7 @@ export function PostGame() {
     return () => {
       cancelled = true;
     };
-  }, [lobbyCode]);
+  }, [lobbyCode, addError]);
 
   const champion = bracketSlots[0] ?? null;
   const decidedCount = bracketSlots
