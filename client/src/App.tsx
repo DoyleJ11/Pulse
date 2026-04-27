@@ -8,7 +8,6 @@ import { useRoomStore } from "./stores/roomStore";
 import { useAuthStore } from "./stores/authStore";
 import { useTokenStore } from "./stores/tokenStore";
 import { BracketView } from "./components/bracket/BracketView";
-import { BracketTest } from "./components/bracket/BracketTest";
 import { PostGame } from "./components/postgame/PostGame";
 
 function App() {
@@ -75,7 +74,6 @@ function App() {
       <Route path="/lobby/:code/picking" element={<PickingFilterPage />} />
       <Route path="/lobby/:code/bracket" element={<BracketView />} />
       <Route path="/lobby/:code/postgame" element={<PostGame />} />
-      <Route path="/test" element={<BracketTest />} />
     </Routes>
   );
 }

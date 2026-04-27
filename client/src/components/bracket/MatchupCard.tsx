@@ -44,7 +44,6 @@ export function MatchupCard({
   }
 
   const isActive = state === "active";
-  const isDecided = state === "decided-winner" || state === "decided-loser";
   const isLoser = state === "decided-loser";
   const isWinner = state === "decided-winner";
 

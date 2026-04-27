@@ -14,8 +14,6 @@ function Lobby() {
   const token = useTokenStore((state) => state.token);
   const userId = useAuthStore((state) => state.userId);
   const playerList = useRoomStore((state) => state.players);
-  const setPlayerList = useRoomStore((state) => state.setPlayers);
-  const setHostId = useRoomStore((state) => state.setHostId);
   const hostId = useRoomStore((state) => state.hostId);
   const setStatus = useRoomStore((state) => state.setStatus);
   const lobbyCode = useRoomStore((state) => state.code);

@@ -1,6 +1,7 @@
 import { type SongSelection } from "../../types/sharedTypes";
-import { X } from "lucide-react";
+import { Loader2, Pause, Play, X } from "lucide-react";
 import { formatDuration } from "../../utils/formatDuration";
+import { useAudioPlayer } from "../../hooks/useAudioPlayer";
 
 interface SongCardProps extends SongSelection {
   seed: number;
@@ -21,6 +22,11 @@ export function SongCard({
   duration,
   isLockedIn,
 }: SongCardProps) {
+  const { toggle, isPlayingSong, isLoading, currentSongId } = useAudioPlayer();
+  const isThisSong = currentSongId === deezerId;
+  const isThisPlaying = isPlayingSong(deezerId);
+  const isThisLoading = isLoading && isThisSong;
+
   return (
     <main
       className="bg-bg-card border-border-heavy rounded-card flex items-center gap-3 hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transition-shadow"
@@ -30,12 +36,42 @@ export function SongCard({
       }}
     >
       {/* Album Art */}
-      <img
-        src={albumArt}
-        alt="Album cover"
-        className="w-16 h-16 rounded-thumb object-cover border-border-heavy"
-        style={{ borderWidth: "var(--border-weight-heavy)" }}
-      />
+      <div className="relative group/album shrink-0">
+        <img
+          src={albumArt}
+          alt="Album cover"
+          className="w-16 h-16 rounded-thumb object-cover border-border-heavy"
+          style={{ borderWidth: "var(--border-weight-heavy)" }}
+        />
+
+        <button
+          type="button"
+          disabled={!preview}
+          onClick={() => preview && toggle(deezerId, preview)}
+          aria-label={isThisPlaying ? "Pause preview" : "Play preview"}
+          className={`absolute inset-0 bg-black/30 rounded-thumb flex items-center justify-center transition-opacity hover:bg-black/50 cursor-pointer ${
+            isThisPlaying || isThisLoading
+              ? "opacity-100"
+              : "opacity-0 group-hover/album:opacity-100"
+          }`}
+        >
+          <div className="w-8 h-8 bg-white rounded-full flex items-center justify-center transition-transform group-hover/album:scale-110">
+            {isThisLoading ? (
+              <Loader2 className="w-4 h-4 text-black animate-spin" />
+            ) : isThisPlaying ? (
+              <Pause
+                className="w-4 h-4 text-black fill-black"
+                strokeWidth={0}
+              />
+            ) : (
+              <Play
+                className="w-4 h-4 text-black fill-black ml-0.5"
+                strokeWidth={0}
+              />
+            )}
+          </div>
+        </button>
+      </div>
 
       {/* Song info */}
       <div className="flex-1 min-w-0">
