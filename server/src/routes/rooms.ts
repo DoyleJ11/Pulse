@@ -22,6 +22,7 @@ const SongSchema = z.object({
   title: z.string(),
   artist: z.string(),
   albumArt: z.string(),
+  duration: z.number(),
   preview: z.string(),
 });
 export type Song = z.infer<typeof SongSchema>;

@@ -11,7 +11,10 @@ interface SearchContainerProps {
   isLockedIn: boolean;
 }
 
-export function SearchContainer({ onAddSong, isLockedIn }: SearchContainerProps) {
+export function SearchContainer({
+  onAddSong,
+  isLockedIn,
+}: SearchContainerProps) {
   const [results, setResults] = useState<DeezerSong[]>([]);
   const [query, setQuery] = useState("");
   const debouncedQuery = useDebounce(query, 300);
@@ -34,6 +37,7 @@ export function SearchContainer({ onAddSong, isLockedIn }: SearchContainerProps)
       title: result.title,
       artist: result.artist.name,
       albumArt: result.album.cover_medium,
+      duration: result.duration,
       preview: result.preview,
     };
 
@@ -41,7 +45,9 @@ export function SearchContainer({ onAddSong, isLockedIn }: SearchContainerProps)
   };
 
   return (
-    <div className={`h-full flex flex-col rounded-3xl bg-section-coral p-6 ${isLockedIn ? 'opacity-50 pointer-events-none' : ''}`}>
+    <div
+      className={`h-full flex flex-col rounded-3xl bg-section-coral p-6 ${isLockedIn ? "opacity-50 pointer-events-none" : ""}`}
+    >
       {/* Search input */}
       <div className="relative mb-4">
         <input

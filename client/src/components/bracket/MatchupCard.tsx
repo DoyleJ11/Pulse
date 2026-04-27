@@ -2,12 +2,13 @@ import { Play, Pause, Loader2 } from "lucide-react";
 import { type BracketSlot } from "./BracketView";
 import { PermissionGuard } from "../util/PermissionGuard";
 import { useAudioPlayer } from "../../hooks/useAudioPlayer";
+import { CARD_H } from "./bracketLayout";
+import { formatDuration } from "../../utils/formatDuration";
 
 interface SongCardProps {
   song: BracketSlot | null;
   state: "empty" | "active" | "decided-winner" | "decided-loser" | "normal";
   onPick?: (matchupIndex: number, winnerSongId: string) => void;
-  seedColor?: string;
   size?: "base" | "quarter" | "semi" | "final";
   parentIndex: number;
 }
@@ -20,21 +21,21 @@ export function MatchupCard({
   parentIndex,
 }: SongCardProps) {
   const sizeClasses = {
-    base: "w-[364px]",
+    base: "w-[400px]",
     quarter: "w-[400px]",
     semi: "w-[437px]",
     final: "w-[473px]",
   };
 
   const seedColors = [
-    "#2DD4BF",
-    "#FF7B6B",
-    "#C4B5FD",
-    "#FFD952",
-    "#6EE7B7",
-    "#2DD4BF",
-    "#FF7B6B",
-    "#C4B5FD",
+    "#FFD952", // 1 — yellow
+    "#F59E0B", // 2 — amber
+    "#95e615", // 3 — lime
+    "#75a8fa", // 4 — sky blue
+    "#8183fc", // 5 — indigo
+    "#b164fa", // 6 — violet
+    "#e75bfc", // 7 — magenta
+    "#f55ba7", // 8 — pink
   ];
   const { toggle, isPlayingSong, isLoading } = useAudioPlayer();
   const isThisPlaying = song ? isPlayingSong(song.songId) : false;
@@ -44,7 +45,8 @@ export function MatchupCard({
   if (state === "empty" || !song) {
     return (
       <div
-        className={`${sizeClasses[size]} h-25 border-[3px] border-dashed border-black/30 rounded-2xl flex items-center justify-center bg-transparent`}
+        className={`${sizeClasses[size]} border-[3px] border-dashed border-black/30 rounded-2xl flex items-center justify-center bg-transparent`}
+        style={{ height: CARD_H }}
       >
         <div className="text-black/40 font-black text-lg">TBD</div>
       </div>
@@ -64,102 +66,143 @@ export function MatchupCard({
     }
   };
 
-  const getPickButtonBg = () => {
-    return song.role === "player_a" ? "#FF6B58" : "#14B8A6";
-  };
-
   return (
     <div
-      className={`${sizeClasses[size]} ${opacity} transition-all duration-300`}
+      className={`${sizeClasses[size]} ${opacity} relative transition-all duration-300`}
+      style={{ height: CARD_H }}
     >
+      {/* Loser X badge — lives on the outer wrapper so it escapes the inner card's overflow-hidden */}
+      {isLoser && (
+        <div className="absolute -top-2 -right-2 w-8 h-8 bg-black rounded-full flex items-center justify-center border-[3px] border-black z-20">
+          <span className="text-white font-black">✕</span>
+        </div>
+      )}
+
       <div
-        className={`relative border-[3px] border-black rounded-2xl p-4 ${
-          isActive ? "shadow-heavy" : "shadow-[2px_2px_0px_0px_rgba(0,0,0,0.3)]"
+        className={`relative h-full overflow-hidden bg-white border-[3px] border-black rounded-2xl ${
+          isActive
+            ? "shadow-[3px_3px_0px_0px_#0A0A0A]"
+            : "shadow-[2px_2px_0px_0px_rgba(0,0,0,0.3)]"
         }`}
-        style={{ backgroundColor: getPlayerColor() }}
       >
-        {/* Loser X badge */}
-        {isLoser && (
-          <div className="absolute -top-2 -right-2 w-8 h-8 bg-black rounded-full flex items-center justify-center border-[3px] border-black z-10">
-            <span className="text-white font-black">✕</span>
+        <div className="flex h-full">
+          {/* A/B player strip */}
+          <div
+            className="w-[36px] shrink-0 border-r-[3px] border-black flex items-center justify-center"
+            style={{
+              backgroundColor: song.role === "player_a" ? "#FF7B6B" : "#2DD4BF",
+            }}
+          >
+            <span className="text-black text-base font-black">
+              {song.role === "player_a" ? "A" : "B"}
+            </span>
           </div>
-        )}
 
-        <div className="flex items-center gap-3 mb-3">
-          {/* Album play btn overlay */}
-          <div className="relative shrink-0">
-            <img
-              src={song.albumArt}
-              alt={song.title}
-              className="w-16 h-16 rounded-lg object-cover border-[3px] border-black"
-            />
+          {/* Card content */}
+          <div className="flex-1 flex items-center gap-3 p-4 min-w-0">
+            {/* Album play btn overlay */}
+            <div className="relative shrink-0">
+              <img
+                src={song.albumArt}
+                alt={song.title}
+                className="w-16 h-16 rounded-lg object-cover border-[3px] border-black"
+              />
 
-            <button
-              className={`absolute inset-0 bg-black/30 rounded-lg flex items-center justify-center hover:bg-black/50 transition-colors group cursor-pointer`}
-              disabled={!song.previewUrl}
-              onClick={() =>
-                song.previewUrl && toggle(song.songId, song.previewUrl)
-              }
-              aria-label={isThisPlaying ? "Pause preview" : "Play preview"}
-            >
-              <div className="w-8 h-8 bg-white rounded-full flex items-center justify-center group-hover:scale-110 transition-transform">
-                {isThisLoading ? (
-                  <Loader2 className="w-4 h-4 text-black animate-spin" />
-                ) : isThisPlaying ? (
-                  <Pause
-                    className="w-4 h-4 text-black fill-black"
-                    strokeWidth={0}
-                  />
-                ) : (
-                  <Play
-                    className="w-4 h-4 text-black fill-black ml-0.5"
-                    strokeWidth={0}
-                  />
-                )}
+              <button
+                className={`absolute inset-0 bg-black/30 rounded-lg flex items-center justify-center hover:bg-black/50 transition-colors group cursor-pointer`}
+                disabled={!song.previewUrl}
+                onClick={() =>
+                  song.previewUrl && toggle(song.songId, song.previewUrl)
+                }
+                aria-label={isThisPlaying ? "Pause preview" : "Play preview"}
+              >
+                <div className="w-8 h-8 bg-white rounded-full flex items-center justify-center group-hover:scale-110 transition-transform">
+                  {isThisLoading ? (
+                    <Loader2 className="w-4 h-4 text-black animate-spin" />
+                  ) : isThisPlaying ? (
+                    <Pause
+                      className="w-4 h-4 text-black fill-black"
+                      strokeWidth={0}
+                    />
+                  ) : (
+                    <Play
+                      className="w-4 h-4 text-black fill-black ml-0.5"
+                      strokeWidth={0}
+                    />
+                  )}
+                </div>
+              </button>
+            </div>
+
+            {/* Song info */}
+            <div className="flex-1 min-w-0">
+              <div className="font-black text-black truncate text-base leading-tight">
+                {song.title}
               </div>
-            </button>
-          </div>
+              <div className="font-bold text-black/50 truncate text-[12px]">
+                {song.artist}
+              </div>
+              <div className="flex items-center gap-2 mt-0.5">
+                <span className="text-[12px] font-black text-black/50 tabular-nums font-mono">
+                  {formatDuration(song.duration)}
+                </span>
+              </div>
+            </div>
 
-          {/* Song info */}
-          <div className="flex-1 min-w-0">
-            <div className="font-black text-black truncate text-base leading-tight">
-              {song.title}
-            </div>
-            <div className="font-bold text-black/70 truncate text-sm">
-              {song.artist}
-            </div>
-            <div className="text-[10px] font-black text-black/50 uppercase mt-0.5">
-              {song.role === "player_a" ? "PLAYER A" : "PLAYER B"}
-            </div>
-          </div>
-
-          {/* Seed badge */}
-          <div className="shrink-0">
-            <div
-              className="w-9 h-9 rounded-full border-[3px] border-black flex items-center justify-center font-black text-black text-sm"
-              style={{
-                backgroundColor:
-                  seedColors[(song.seed - 1) % seedColors.length],
-              }}
-            >
-              {song.seed}
+            {/* Seed badge */}
+            <div className="shrink-0">
+              <div
+                className="w-9 h-9 rounded-full border-[3px] border-black flex items-center justify-center font-black text-black text-sm"
+                style={{
+                  backgroundColor: seedColors[song.seed - 1],
+                }}
+              >
+                {song.seed}
+              </div>
             </div>
           </div>
         </div>
-
-        {/* Pick button for active state */}
-        {isActive && onPick && (
-          <PermissionGuard allowedRoles={["judge"]}>
-            <button
-              onClick={() => onPick(parentIndex, song.songId)}
-              className="w-full py-3 rounded-full border-[3px] border-black font-black text-sm hover:scale-[1.02] active:scale-[0.98] transition-all text-white uppercase"
-              style={{ backgroundColor: getPickButtonBg() }}
-            >
-              PICK THIS SONG
-            </button>
-          </PermissionGuard>
-        )}
       </div>
+
+      {/* Pick button — absolutely positioned below the card so it doesn't affect card height */}
+      {isActive && onPick && (
+        <PermissionGuard allowedRoles={["judge"]}>
+          <button
+            onClick={() => onPick(parentIndex, song.songId)}
+            aria-label={`Pick ${song.title}`}
+            className={`group absolute rounded-2xl mx-auto left-0 right-0 top-full mt-2 z-10 grid grid-cols-[auto_1fr_auto] items-center gap-2.5 bg-[#FFD952] text-black border-2 border-black px-3 py-2 uppercase cursor-pointer shadow-[4px_4px_0_#0A0A0A] transition-[transform,box-shadow,background-color] duration-[120ms] ease-in-out hover:translate-x-[-1px] hover:translate-y-[-1px] hover:shadow-[5px_5px_0_#0A0A0A] active:translate-x-[3px] active:translate-y-[3px] active:shadow-[1px_1px_0_#0A0A0A] ${
+              song.role === "player_a"
+                ? "hover:bg-[#FF7B6B]"
+                : "hover:bg-[#2DD4BF]"
+            }`}
+          >
+            <span
+              className={`w-[22px] h-[22px] inline-flex items-center justify-center bg-black text-[#FFD952] border-[1.5px] border-black ${
+                song.role === "player_a"
+                  ? "group-hover:text-[#FF7B6B]"
+                  : "group-hover:text-[#2DD4BF]"
+              }`}
+              aria-hidden="true"
+            >
+              <svg viewBox="0 0 24 24" width="14" height="14">
+                <path
+                  d="M5 12l5 5L20 7"
+                  stroke="currentColor"
+                  strokeWidth="3"
+                  fill="none"
+                  strokeLinecap="square"
+                />
+              </svg>
+            </span>
+            <span className="text-xs font-black tracking-[0.18em] text-left">
+              PICK THIS SONG
+            </span>
+            <span className="text-[10px] font-bold tracking-[0.12em] text-black/60 max-w-[140px] truncate text-right group-hover:text-black">
+              {song.title}
+            </span>
+          </button>
+        </PermissionGuard>
+      )}
     </div>
   );
 }
