@@ -10,6 +10,7 @@ import { Nav } from "../ui/Nav";
 import { BracketProgress } from "./BracketProgress";
 import { BracketHeader } from "./BracketHeader";
 import { EndGameBtn } from "./EndGameBtn";
+import { ViewChampionBtn } from "./ViewChampionBtn";
 import { PermissionGuard } from "../util/PermissionGuard";
 import { usePresence } from "../../hooks/usePresence";
 import { useNavigate } from "react-router";
@@ -355,10 +356,14 @@ export function BracketView() {
           </div>
         </div>
       </div>
-      {hasDisconnected && (
-        <PermissionGuard allowedRoles={["player_a", "player_b", "judge"]}>
-          <EndGameBtn />
-        </PermissionGuard>
+      {champion ? (
+        <ViewChampionBtn />
+      ) : (
+        hasDisconnected && (
+          <PermissionGuard allowedRoles={["player_a", "player_b", "judge"]}>
+            <EndGameBtn />
+          </PermissionGuard>
+        )
       )}
     </div>
   );

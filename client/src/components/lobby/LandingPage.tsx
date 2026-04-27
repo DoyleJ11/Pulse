@@ -8,9 +8,10 @@ import { useTokenStore } from "../../stores/tokenStore";
 function LandingPage() {
   const navigate = useNavigate();
   const setAuth = useAuthStore((state) => state.setAuth);
+  const persistedName = useAuthStore((state) => state.name);
   const setToken = useTokenStore((state) => state.setToken);
   const setRoomCode = useRoomStore((state) => state.setCode);
-  const [name, setName] = useState("");
+  const [name, setName] = useState(persistedName);
   const [code, setCode] = useState("");
 
   const handleCreate = async (e: React.FormEvent<HTMLFormElement>) => {

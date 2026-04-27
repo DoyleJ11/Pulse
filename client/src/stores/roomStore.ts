@@ -19,6 +19,7 @@ interface RoomState {
   setPlayers: (players: Player[]) => void;
   setHostId: (host: string) => void;
   setStatus: (status: Status) => void;
+  clearRoom: () => void;
 }
 
 const useRoomStore = create<RoomState>()(
@@ -32,6 +33,8 @@ const useRoomStore = create<RoomState>()(
       setCode: (code: string) => set({ code: code }),
       setHostId: (host: string) => set({ hostId: host }),
       setStatus: (newStatus: Status) => set({ status: newStatus }),
+      clearRoom: () =>
+        set({ hostId: "", code: "", status: "lobby", players: [] }),
     }),
     {
       name: "room-storage",
