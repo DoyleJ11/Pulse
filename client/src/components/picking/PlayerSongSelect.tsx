@@ -2,7 +2,6 @@ import { SearchContainer } from "./SearchContainer";
 import { SongContainer } from "./SongContainer";
 import { useSongStore } from "../../stores/songStore";
 import { useRoomStore } from "../../stores/roomStore";
-import { useAuthStore } from "../../stores/authStore";
 import { useTokenStore } from "../../stores/tokenStore";
 import { submitPicks } from "../../services/api";
 import { useToastStore } from "../../stores/toastStore";
@@ -17,36 +16,21 @@ export function PlayerSongSelect() {
   const setLockIn = useSongStore((state) => state.setLockIn);
   const isLockedIn = useSongStore((state) => state.isLockedIn);
   const roomCode = useRoomStore((state) => state.code);
-  const userId = useAuthStore((state) => state.userId);
-  const name = useAuthStore((state) => state.name);
-  const role = useAuthStore((state) => state.role);
   const token = useTokenStore((state) => state.token);
   const [isLoading, setIsLoading] = useState(false);
   const pickRef = useRef({
     songCount: selectedSongs.length,
-    code: roomCode,
-    userId: userId,
-    name: name,
-    role: role,
     isLockedIn: isLockedIn,
   });
 
   useEffect(() => {
     pickRef.current = {
       songCount: selectedSongs.length,
-      code: roomCode,
-      userId: userId,
-      name: name,
-      role: role,
       isLockedIn: isLockedIn,
     };
 
     socket.emit("pickUpdate", {
       songCount: selectedSongs.length,
-      code: roomCode,
-      userId: userId,
-      name: name,
-      role: role,
       lockedIn: isLockedIn,
     });
   }, [selectedSongs.length, isLockedIn]);
@@ -55,10 +39,6 @@ export function PlayerSongSelect() {
     socket.on("roomState", () => {
       socket.emit("pickUpdate", {
         songCount: pickRef.current.songCount,
-        code: pickRef.current.code,
-        userId: pickRef.current.userId,
-        name: pickRef.current.name,
-        role: pickRef.current.role,
         lockedIn: pickRef.current.isLockedIn,
       });
     });

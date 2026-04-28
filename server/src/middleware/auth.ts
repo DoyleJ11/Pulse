@@ -1,6 +1,5 @@
 import { type Request, type Response, type NextFunction } from "express"
-import jwt, { type Secret, type JwtPayload } from "jsonwebtoken"
-import { env } from "../utils/config.js";
+import { verifyToken, type Payload } from "../utils/authUtils.js";
 
 declare global {
     namespace Express {
@@ -8,13 +7,6 @@ declare global {
             user: Payload;
         }
     }
-}
-
-export interface Payload extends JwtPayload {
-    userId: string,
-    name: string,
-    role: string,
-    roomId: string,
 }
 
 export const authMiddleware = (req: Request, res: Response, next: NextFunction) => {
@@ -29,8 +21,7 @@ export const authMiddleware = (req: Request, res: Response, next: NextFunction) 
             return res.status(401).json({message: "No token provided"})
         }
 
-        const secretKey: Secret = env.JWT_SECRET;
-        const decoded = jwt.verify(token, secretKey) as Payload;
+        const decoded = verifyToken(token);
         req.user = decoded;
 
         next();

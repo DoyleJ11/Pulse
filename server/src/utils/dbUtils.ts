@@ -42,4 +42,23 @@ async function getUserRoleById(userId: string) {
   return user.role;
 }
 
-export { getAllUsers, removeUser, getUserRoleById, setPlayerConnected };
+async function getUserSessionById(userId: string) {
+  return await prisma.player.findUnique({
+    where: { id: userId },
+    include: {
+      room: {
+        select: {
+          code: true,
+        },
+      },
+    },
+  });
+}
+
+export {
+  getAllUsers,
+  removeUser,
+  getUserRoleById,
+  getUserSessionById,
+  setPlayerConnected,
+};
