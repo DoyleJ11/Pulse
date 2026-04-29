@@ -157,6 +157,31 @@
   }
 }
 
+@keyframes home-marquee {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-33.333%);
+  }
+}
+
+@keyframes home-vinyl-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes home-float {
+  0%,
+  100% {
+    transform: translateY(0) rotate(0deg);
+  }
+  50% {
+    transform: translateY(-14px) rotate(6deg);
+  }
+}
+
 @layer utilities {
   .no-scrollbar::-webkit-scrollbar {
     display: none;
@@ -165,10 +190,24 @@
     -ms-overflow-style: none; /* IE and Edge */
     scrollbar-width: none; /* Firefox */
   }
+
+  .home-marquee-track {
+    animation: home-marquee 30s linear infinite;
+  }
+
+  .home-vinyl {
+    animation: home-vinyl-spin 14s linear infinite;
+    transform-origin: center;
+  }
+
+  .home-float {
+    animation: home-float 5s ease-in-out 2s infinite normal running;
+  }
 }
 
 body {
   background-color: var(--color-bg-cream);
   color: var(--color-text-primary);
   font-family: var(--font-family-base);
+  box-sizing: border-box;
 }

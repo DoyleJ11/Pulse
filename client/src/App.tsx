@@ -1,4 +1,5 @@
 import { Routes, Route } from "react-router";
+import { HomePage } from "./components/lobby/HomePage";
 import { LandingPage } from "./components/lobby/LandingPage";
 import { Lobby } from "./components/lobby/Lobby";
 import { PickingFilterPage } from "./components/picking/PickingFilterPage";
@@ -101,7 +102,8 @@ function App() {
 
   return (
     <Routes>
-      <Route path="/" element={<LandingPage />} />
+      <Route path="/" element={<HomePage />} />
+      <Route path="/play" element={<LandingPage />} />
       <Route path="/lobby/:code" element={<Lobby />} />
       <Route path="/lobby/:code/picking" element={<PickingFilterPage />} />
       <Route path="/lobby/:code/bracket" element={<BracketView />} />
