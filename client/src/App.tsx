@@ -1,6 +1,6 @@
 import { Routes, Route } from "react-router";
 import { HomePage } from "./components/lobby/HomePage";
-import { LandingPage } from "./components/lobby/LandingPage";
+import { LobbyCreation } from "./components/lobby/LobbyCreation";
 import { Lobby } from "./components/lobby/Lobby";
 import { PickingFilterPage } from "./components/picking/PickingFilterPage";
 import { useEffect, useRef } from "react";
@@ -98,12 +98,22 @@ function App() {
       socket.off("error", onSocketError);
       socket.off("roomState", onRoomState);
     };
-  }, [lobbyCode, userId, name, token, role, setPlayers, setHostId, addToast, addError]);
+  }, [
+    lobbyCode,
+    userId,
+    name,
+    token,
+    role,
+    setPlayers,
+    setHostId,
+    addToast,
+    addError,
+  ]);
 
   return (
     <Routes>
       <Route path="/" element={<HomePage />} />
-      <Route path="/play" element={<LandingPage />} />
+      <Route path="/play" element={<LobbyCreation />} />
       <Route path="/lobby/:code" element={<Lobby />} />
       <Route path="/lobby/:code/picking" element={<PickingFilterPage />} />
       <Route path="/lobby/:code/bracket" element={<BracketView />} />
