@@ -16,7 +16,7 @@ export function HomeButton({
 }) {
   return (
     <button
-      className={`inline-flex items-center justify-center gap-2 rounded-full border-2 border-black font-black uppercase tracking-wide transition-[transform,box-shadow] duration-[120ms] ease-[ease] hover:-translate-x-0.5 hover:-translate-y-0.5 active:translate-x-1 active:translate-y-1 ${
+      className={`inline-flex items-center justify-center gap-2 rounded-full border-2 border-black font-black uppercase tracking-wide transition-[translate,box-shadow] duration-[120ms] ease-[ease] hover:-translate-x-0.5 hover:-translate-y-0.5 active:translate-x-1 active:translate-y-1 ${
         variant === "dark" ? "bg-black text-white" : "bg-white text-black"
       } ${
         size === "large"

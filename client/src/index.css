@@ -16,6 +16,13 @@
   --color-bg-cream: #faf7f2;
   --color-bg-card: #fff9f0;
 
+  --color-teal: #2dd4bf;
+  --color-golden: #ffd952;
+  --color-coral: #ff7b6b;
+  --color-lavender: #c4b5fd;
+  --color-ink: #0a0a0a;
+  --color-pink: #ff3d8b;
+
   /* ── Section colors (color blocking) ──
      These are the bold background fills for major UI panels.
      Each panel "owns" a color — search is coral, picks is golden, etc.
@@ -92,6 +99,9 @@
   --shadow-active: 2px 2px 0px 0px rgba(0, 0, 0, 1);
   --shadow-heavy: 6px 6px 0px 0px rgba(0, 0, 0, 1);
   --shadow-locked: 8px 8px 0px 0px rgba(0, 0, 0, 1);
+
+  --shadow-small: 3px 3px 0px 0px #0a0a0a;
+  --shadow-large: 6px 6px 0px 0px #0a0a0a;
 
   /* ── Typography ──
      Inter is the typeface. The design uses extreme weight contrast:
@@ -182,6 +192,17 @@
   }
 }
 
+@keyframes wait-ring {
+  0% {
+    transform: scale(0.6);
+    opacity: 0.7;
+  }
+  100% {
+    transform: scale(1.4);
+    opacity: 0;
+  }
+}
+
 @layer utilities {
   .no-scrollbar::-webkit-scrollbar {
     display: none;
@@ -203,6 +224,21 @@
   .home-float {
     animation: home-float 5s ease-in-out 2s infinite normal running;
   }
+
+  .wait-ring {
+    animation: wait-ring 1.6s ease-out 0s infinite normal none running;
+  }
+}
+
+@utility display {
+  font-family: "Inter", sans-serif;
+  font-weight: 900;
+  letter-spacing: -0.035em;
+  line-height: 0.92;
+}
+
+@utility border-ink {
+  border: 2px solid #0a0a0a;
 }
 
 body {

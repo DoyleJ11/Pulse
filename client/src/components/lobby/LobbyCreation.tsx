@@ -65,8 +65,11 @@ function HeroSection({ goHome }: { goHome: () => void }) {
 
   const [name, setName] = useState(persistedName);
   const [code, setCode] = useState("");
+
   const nameIsEmpty = name.length === 0;
   const codeIsEmpty = code.length !== 6;
+
+  const initial = nameIsEmpty ? "?" : name[0];
 
   const handleJoin = async () => {
     try {
@@ -154,10 +157,10 @@ function HeroSection({ goHome }: { goHome: () => void }) {
               className="w-14 h-14 shrink-0 border-2 border-text-primary rounded-2xl flex items-center justify-center font-black text-2xl"
               style={{ backgroundColor: palette.coral }}
             >
-              ?
+              {initial}
             </div>
             <input
-              className="w-full text-lg font-bold text-text-primary py-4.5 px-5.5 border-2 border-text-primary rounded-2xl bg-white outline-none transition-[transform,box-shadow] duration-120"
+              className="w-full text-lg font-bold text-text-primary py-4.5 px-5.5 border-2 border-text-primary rounded-2xl bg-white outline-none transition-[translate,box-shadow] duration-120 ease-[ease] focus:-translate-px focus:shadow-[3px_3px_0_#0A0A0A]"
               placeholder="What should we call you?"
               value={name}
               onChange={(e) => setName(e.target.value)}
@@ -168,7 +171,7 @@ function HeroSection({ goHome }: { goHome: () => void }) {
         <div className="grid grid-cols-2 gap-6">
           {/* Add 0.2s animation delay */}
           <div
-            className="p-8 flex flex-col gap-4 min-h-[400px] relative overflow-hidden transition-[transform] duration-200 transform-none shadow-[6px_6px_0_#0A0A0A] border-2 border-text-primary rounded-3xl"
+            className="p-8 flex flex-col gap-4 min-h-[400px] relative overflow-hidden transition-[translate] duration-200 ease-[ease] hover:-translate-x-0.5 hover:-translate-y-0.5 transform-none shadow-[6px_6px_0_#0A0A0A] border-2 border-text-primary rounded-3xl"
             style={{ backgroundColor: palette.coral }}
           >
             <div className="absolute -top-5 -right-5 w-30 h-30 opacity-60">
@@ -214,7 +217,7 @@ function HeroSection({ goHome }: { goHome: () => void }) {
           </div>
 
           <div
-            className="p-8 flex flex-col gap-4 min-h-[400px] relative overflow-hidden transition-[transform] duration-200 transform-none shadow-[6px_6px_0_#0A0A0A] border-2 border-text-primary rounded-3xl"
+            className="p-8 flex flex-col gap-4 min-h-[400px] relative overflow-hidden transition-[translate] duration-200 ease-[ease] hover:-translate-x-0.5 hover:-translate-y-0.5 transform-none shadow-[6px_6px_0_#0A0A0A] border-2 border-text-primary rounded-3xl"
             style={{ backgroundColor: palette.teal }}
           >
             <div className="absolute -bottom-5 -left-5 w-28 h-28 opacity-60">
@@ -242,7 +245,7 @@ function HeroSection({ goHome }: { goHome: () => void }) {
                 <span>LOBBY CODE</span>
               </label>
               <input
-                className="font-mono text-2xl tracking-[0.35em] uppercase text-center w-full px-5.5 py-4.5 font-bold border-2 border-text-primary rounded-2xl bg-white text-text-primary outline-none transition-[transform,box-shadow] duration-120 ease-[ease]"
+                className="font-mono text-2xl tracking-[0.35em] uppercase text-center w-full px-5.5 py-4.5 font-bold border-2 border-text-primary rounded-2xl bg-white text-text-primary outline-none transition-[translate,box-shadow] duration-120 ease-[ease] focus:-translate-px focus:shadow-[3px_3px_0_#0A0A0A]"
                 placeholder="ABC123"
                 value={code}
                 onChange={(e) => setCode(e.target.value)}
