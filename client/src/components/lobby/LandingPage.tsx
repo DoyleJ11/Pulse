@@ -3,45 +3,43 @@ import { createRoom, joinRoom } from "../../services/api";
 import { useNavigate } from "react-router";
 import { useAuthStore } from "../../stores/authStore";
 import { useRoomStore } from "../../stores/roomStore";
-import { socket } from "../../utils/socket";
+import { useTokenStore } from "../../stores/tokenStore";
+import { useToastStore } from "../../stores/toastStore";
 
 function LandingPage() {
   const navigate = useNavigate();
   const setAuth = useAuthStore((state) => state.setAuth);
+  const persistedName = useAuthStore((state) => state.name);
+  const setToken = useTokenStore((state) => state.setToken);
   const setRoomCode = useRoomStore((state) => state.setCode);
-  const [name, setName] = useState("");
+  const addError = useToastStore((state) => state.addError);
+  const [name, setName] = useState(persistedName);
   const [code, setCode] = useState("");
 
   const handleCreate = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    const response = await createRoom(name);
-    setAuth(response.jwt, response.name, response.role, response.id);
-    setRoomCode(response.code);
-    socket.connect();
-    socket.emit("joinRoom", {
-      id: response.id,
-      code: response.code,
-      name: response.name,
-      token: response.jwt,
-      role: response.role,
-    });
-    navigate(`/lobby/${response.code}`);
+    try {
+      const response = await createRoom(name);
+      setAuth(response.name, response.role, response.id);
+      setToken(response.jwt);
+      setRoomCode(response.code);
+      navigate(`/lobby/${response.code}`);
+    } catch (error) {
+      addError(error, "Could not create the room. Please try again.");
+    }
   };
 
   const handleJoin = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    const response = await joinRoom(name, code);
-    setAuth(response.jwt, response.name, response.role, response.id);
-    setRoomCode(response.code);
-    socket.connect();
-    socket.emit("joinRoom", {
-      id: response.id,
-      code: response.code,
-      name: response.name,
-      token: response.jwt,
-      role: response.role,
-    });
-    navigate(`/lobby/${response.code}`);
+    try {
+      const response = await joinRoom(name, code);
+      setAuth(response.name, response.role, response.id);
+      setToken(response.jwt);
+      setRoomCode(response.code);
+      navigate(`/lobby/${response.code}`);
+    } catch (error) {
+      addError(error, "Could not join the room. Please check the code and try again.");
+    }
   };
 
   return (

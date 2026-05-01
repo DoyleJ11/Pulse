@@ -1,0 +1,107 @@
+import { type SongSelection } from "../../types/sharedTypes";
+import { Loader2, Pause, Play, X } from "lucide-react";
+import { formatDuration } from "../../utils/formatDuration";
+import { useAudioPlayer } from "../../hooks/useAudioPlayer";
+
+interface SongCardProps extends SongSelection {
+  seed: number;
+  seedColor: string;
+  onRemove: () => void;
+  isLockedIn: boolean;
+}
+
+export function SongCard({
+  deezerId,
+  title,
+  artist,
+  albumArt,
+  seed,
+  seedColor,
+  onRemove,
+  preview,
+  duration,
+  isLockedIn,
+}: SongCardProps) {
+  const { toggle, isPlayingSong, isLoading, currentSongId } = useAudioPlayer();
+  const isThisSong = currentSongId === deezerId;
+  const isThisPlaying = isPlayingSong(deezerId);
+  const isThisLoading = isLoading && isThisSong;
+
+  return (
+    <main
+      className="bg-bg-card border-border-heavy rounded-card flex items-center gap-3 hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transition-shadow"
+      style={{
+        borderWidth: "var(--border-weight-heavy)",
+        padding: "var(--space-md)",
+      }}
+    >
+      {/* Album Art */}
+      <div className="relative group/album shrink-0">
+        <img
+          src={albumArt}
+          alt="Album cover"
+          className="w-16 h-16 rounded-thumb object-cover border-border-heavy"
+          style={{ borderWidth: "var(--border-weight-heavy)" }}
+        />
+
+        <button
+          type="button"
+          disabled={!preview}
+          onClick={() => preview && toggle(deezerId, preview)}
+          aria-label={isThisPlaying ? "Pause preview" : "Play preview"}
+          className={`absolute inset-0 bg-black/30 rounded-thumb flex items-center justify-center transition-opacity hover:bg-black/50 cursor-pointer ${
+            isThisPlaying || isThisLoading
+              ? "opacity-100"
+              : "opacity-0 group-hover/album:opacity-100"
+          }`}
+        >
+          <div className="w-8 h-8 bg-white rounded-full flex items-center justify-center transition-transform group-hover/album:scale-110">
+            {isThisLoading ? (
+              <Loader2 className="w-4 h-4 text-black animate-spin" />
+            ) : isThisPlaying ? (
+              <Pause
+                className="w-4 h-4 text-black fill-black"
+                strokeWidth={0}
+              />
+            ) : (
+              <Play
+                className="w-4 h-4 text-black fill-black ml-0.5"
+                strokeWidth={0}
+              />
+            )}
+          </div>
+        </button>
+      </div>
+
+      {/* Song info */}
+      <div className="flex-1 min-w-0">
+        <p className="font-black text-text-primary truncate">{title}</p>
+        <p className="font-medium text-text-secondary truncate">{artist}</p>
+        <p className="text-xs text-text-muted font-bold tabular-nums">
+          {formatDuration(duration)}
+        </p>
+      </div>
+
+      {/* Seed badge */}
+      <div
+        className="w-10 h-10 rounded-pill border-border-heavy flex items-center justify-center font-black text-text-primary"
+        style={{
+          backgroundColor: seedColor,
+          borderWidth: "var(--border-weight-heavy)",
+        }}
+      >
+        {seed}
+      </div>
+
+      {/* Remove Button */}
+      <button
+        onClick={onRemove}
+        disabled={isLockedIn}
+        className={`w-8 h-8 flex items-center justify-center ${isLockedIn ? "cursor-not-allowed" : "hover:scale-110 transition-transform active:scale-95 cursor-pointer"}`}
+        aria-label="Remove song"
+      >
+        <X className="w-6 h-6 text-text-primary" strokeWidth={3} />
+      </button>
+    </main>
+  );
+}

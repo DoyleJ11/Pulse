@@ -5,6 +5,12 @@ import crypto from "crypto";
 import { generateToken } from "../utils/authUtils.js";
 import type { Room } from "../../generated/prisma/client.js";
 import { RoomError } from "../utils/customErrors.js";
+import { type Song } from "../routes/rooms.js";
+import type { Payload } from "../utils/authUtils.js";
+import { seedSongs } from "./bracketService.js";
+
+const INCOMPLETE_ROOM_TTL_MS = 24 * 60 * 60 * 1000;
+const COMPLETE_ROOM_TTL_MS = 7 * 24 * 60 * 60 * 1000;
 
 async function createRoom(name: string) {
   const roomCode = generateCode();
@@ -49,6 +55,9 @@ async function joinRoom(name: string, code: string) {
     if (!room) {
       throw new RoomError(`Cannot find room with code: ${code}`, code, "join");
     }
+    if (isRoomStale(room)) {
+      throw new RoomError("This room has expired. Please create a new room.", code, "join");
+    }
     if (room.status !== "lobby") {
       throw new RoomError(`Cannot join a room in progress.`, code, "join");
     }
@@ -78,25 +87,268 @@ async function joinRoom(name: string, code: string) {
   return result;
 }
 
+async function getRoomState(code: string, user: Payload) {
+  const room = await prisma.room.findUnique({
+    where: { id: user.roomId },
+    include: {
+      players: {
+        omit: { roomId: true },
+      },
+      bracket: true,
+    },
+  });
+
+  if (!room) {
+    throw new RoomError(`Cannot find room with id: ${user.roomId}`, code, "state");
+  }
+  if (room.code !== code) {
+    throw new RoomError(`Provided code does not match user's room code: ${code}`, code, "state");
+  }
+  if (isRoomStale(room)) {
+    throw new RoomError("This room has expired. Please create a new room.", code, "state");
+  }
+
+  const currentUser = room.players.find((player) => player.id === user.userId);
+  if (!currentUser) {
+    throw new RoomError("Your session no longer belongs to this room.", code, "state");
+  }
+
+  return {
+    code: room.code,
+    status: room.status,
+    hostId: room.hostId,
+    currentUser: {
+      id: currentUser.id,
+      name: currentUser.name,
+      role: currentUser.role,
+    },
+    players: room.players,
+    bracket: room.bracket,
+  };
+}
+
+async function setToPicking(code: string, user: Payload) {
+  const room = await prisma.room.findUnique({
+    where: { id: user?.roomId },
+    include: {
+      players: {
+        omit: { roomId: true },
+      },
+    }
+  });
+  if (!room) {
+    throw new RoomError(`Cannot find room with id: ${user.roomId}`, code, "lobby");
+  }
+  if (room.status !== "lobby") {
+    throw new RoomError(`Must be in the lobby phase to start picking`, room.code, "lobby")
+  }
+  if (room.code !== code) {
+    throw new RoomError(`Provided code does not match user's room code: ${code}`, code, "lobby");
+  }
+  if (room.hostId !== user.userId) {
+    throw new RoomError(`Room hostId does not match user's ID`, code, "lobby");
+  }
+  if (room.players.length < 3) {
+    throw new RoomError(`Must have at least two players & one judge to start picking`, room.code, "lobby")
+  }
+
+  const updatedRoom = await prisma.room.update({
+    where: {code: code},
+    data: {status: "picking"}
+  });
+
+  return updatedRoom;
+}
+
+async function submitPicks(songs: Song[], user: Payload, code: string) {
+  // Zod already verified the shape & size of array for us.
+  const room = await prisma.room.findUnique({
+    where: { id: user?.roomId },
+  });
+  if (!room) {
+    throw new RoomError(`Cannot find room with id: ${user.roomId}`, code, "picking");
+  }
+  if (room.status !== "picking") {
+    throw new RoomError(`Cannot submit songs to a room outside of picking phase`, room.code, "picking");
+  }
+  if (room.code !== code) {
+    throw new RoomError(`Provided code does not match user's room code: ${code}`, code, "picking");
+  }
+
+  const player = await prisma.player.findUnique({
+    where: { id: user.userId },
+    include: {
+      songs: true,
+    }
+  })
+  if (!player) {
+    throw new Error(`Could not find player with id ${user.userId}`)
+  }
+  if (player.songs && player.songs.length !== 0) {
+    throw new Error('User already submitted songs.')
+  }
+  if (player.role !== "player_a" && player.role !== "player_b") {
+    throw new Error(`Only players can submit songs.`)
+  }
+
+  const createPromises = songs.map(song =>
+    prisma.song.create({
+      data: {
+        playerId: user.userId,
+        deezerId: song.deezerId,
+        deezerRank: song.deezerRank,
+        title: song.title,
+        artist: song.artist,
+        albumArt: song.albumArt,
+        previewUrl: song.preview,
+        duration: song.duration,
+        seed: null,
+      },
+    })
+  )
+
+  const newSongs = await prisma.$transaction(createPromises);
+  const bothPlayersReady = await checkPlayersSubmitted(user.roomId)
+
+  if (bothPlayersReady) {
+    await seedSongs(code);
+    await prisma.room.update({
+      data: {
+        status: "battling",
+      },
+      where: { id: user?.roomId }
+    })
+  }
+
+  return { newSongs, bothPlayersReady };
+}
+
+async function checkPlayersSubmitted(roomId: string) {
+  // Get all players in given room, including songs.
+  const players = await prisma.player.findMany({
+    where: { roomId: roomId, OR: [{role: "player_a"}, {role: "player_b"}] },
+    include: {songs: true}
+  })
+
+  if (players.length === 0) {
+    throw new Error(`No players were found in room ${roomId}`)
+  }
+
+  if (players.length !== 2) {
+    throw new Error(`There must be 2 players before submitting.`)
+  }
+
+  const allSubmitted = players.every((player) => player.songs.length > 0)
+
+  return allSubmitted;
+}
+
+
+const VALID_ROLES = ["player_a", "player_b", "judge", "spectator"] as const;
+type ValidRole = (typeof VALID_ROLES)[number];
+
+async function changeRole(userId: string, code: string, newRole: unknown) {
+  if (typeof newRole !== "string" || !VALID_ROLES.includes(newRole as ValidRole)) {
+    throw new RoomError("Invalid role.", code, "changeRole");
+  }
+
+  await prisma.$transaction(async (tx) => {
+    const room = await tx.room.findUnique({
+      where: { code: code },
+      include: { players: true },
+    });
+    if (!room) {
+      throw new RoomError(`Cannot find room with code: ${code}`, code, "changeRole");
+    }
+    if (room.status !== "lobby") {
+      throw new RoomError("Roles are locked once the game has started.", code, "changeRole");
+    }
+
+    const me = room.players.find((p) => p.id === userId);
+    if (!me) {
+      throw new RoomError("You're not in this room.", code, "changeRole");
+    }
+    if (me.role === newRole) return;
+
+    if (newRole === "player_a" || newRole === "player_b") {
+      const taken = room.players.some(
+        (p) => p.id !== userId && p.role === newRole,
+      );
+      if (taken) {
+        const label = newRole === "player_a" ? "Player A" : "Player B";
+        throw new RoomError(`${label} is already taken.`, code, "changeRole");
+      }
+    }
+
+    await tx.player.update({
+      where: { id: userId },
+      data: { role: newRole },
+    });
+  });
+}
+
 async function determineRole(room: Room, tx: PrismaTransactionalClient) {
   const players = await tx.player.findMany({
     where: { roomId: room.id },
   });
 
-  const playerCount = players.length;
+  const takenRoles = new Set(players.map((p) => p.role));
 
-  switch (playerCount) {
-    case 1:
-      return "player_b";
-    case 2:
-      return "judge";
-    default:
-      return "spectator";
-  }
+  if (!takenRoles.has("player_a")) return "player_a";
+  if (!takenRoles.has("player_b")) return "player_b";
+  if (!takenRoles.has("judge")) return "judge";
+  return "spectator";
 }
 
 function generateCode() {
   return nanoid(6);
 }
 
-export { createRoom, joinRoom };
+function isRoomStale(room: Pick<Room, "createdAt" | "status">) {
+  const ageMs = Date.now() - room.createdAt.getTime();
+  const ttlMs = room.status === "complete" ? COMPLETE_ROOM_TTL_MS : INCOMPLETE_ROOM_TTL_MS;
+
+  return ageMs > ttlMs;
+}
+
+async function cleanupExpiredRooms() {
+  const rooms = await prisma.room.findMany({
+    select: {
+      id: true,
+      createdAt: true,
+      status: true,
+    },
+  });
+  const expiredRoomIds = rooms.filter(isRoomStale).map((room) => room.id);
+
+  if (expiredRoomIds.length === 0) {
+    return { deletedRooms: 0 };
+  }
+
+  await prisma.$transaction(async (tx) => {
+    await tx.bracket.deleteMany({
+      where: { roomId: { in: expiredRoomIds } },
+    });
+    await tx.song.deleteMany({
+      where: { player: { roomId: { in: expiredRoomIds } } },
+    });
+    await tx.player.deleteMany({
+      where: { roomId: { in: expiredRoomIds } },
+    });
+    await tx.room.deleteMany({
+      where: { id: { in: expiredRoomIds } },
+    });
+  });
+
+  return { deletedRooms: expiredRoomIds.length };
+}
+
+export {
+  createRoom,
+  joinRoom,
+  submitPicks,
+  setToPicking,
+  changeRole,
+  getRoomState,
+  cleanupExpiredRooms,
+};

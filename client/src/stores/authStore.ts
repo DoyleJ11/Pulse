@@ -1,45 +1,38 @@
 import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
+import { type Role } from "../types/sharedTypes";
 
 interface AuthState {
-  token: string;
   name: string;
-  role: string;
+  role: Role;
   userId: string;
-  setAuth: (
-    newToken: string,
-    newName: string,
-    newRole: string,
-    newUserId: string,
-  ) => void;
+  setAuth: (newName: string, newRole: Role, newUserId: string) => void;
+  setRole: (newRole: Role) => void;
+  // Clears role + userId but preserves the user's display name so the
+  // landing page can autofill it next time.
+  clearSession: () => void;
 }
 
 const useAuthStore = create<AuthState>()(
   persist(
     (set) => ({
-      token: "",
       name: "",
-      role: "",
+      role: null,
       userId: "",
 
-      setAuth: (
-        newToken: string,
-        newName: string,
-        newRole: string,
-        newUserId: string,
-      ) =>
+      setAuth: (newName: string, newRole: Role, newUserId: string) =>
         set({
-          token: newToken,
           name: newName,
           role: newRole,
           userId: newUserId,
         }),
+      setRole: (newRole: Role) => set({ role: newRole }),
+      clearSession: () => set({ role: null, userId: "" }),
     }),
     {
       name: "auth-storage",
-      storage: createJSONStorage(() => sessionStorage),
+      storage: createJSONStorage(() => localStorage),
       partialize: (state) => ({
-        token: state.token,
         name: state.name,
         role: state.role,
         userId: state.userId,
