@@ -14,6 +14,7 @@ import {
   endGame,
   getBracketState,
 } from "../services/bracketService.js";
+import { changeRole } from "../services/roomService.js";
 
 const CodeSchema = z.string().trim().length(6, "Room code must be 6 characters");
 
@@ -90,6 +91,28 @@ function registerRoomEvents(io: Server, socket: Socket) {
       });
     } catch (err) {
       console.error("Failed to remove user", err);
+    }
+  });
+
+  socket.on("changeRole", async (data) => {
+    try {
+      const { code, userId } = socket.data;
+      if (!code || !userId) {
+        throw new Error("Not joined to a room");
+      }
+
+      await changeRole(userId, code, data?.newRole);
+
+      const users = await getAllUsers(code);
+      io.to(code).emit("roomState", {
+        users: users.players,
+        hostId: users.hostId,
+      });
+    } catch (err) {
+      console.error("Failed to change role", err);
+      socket.emit("error", {
+        message: err instanceof Error ? err.message : "Could not change role",
+      });
     }
   });
 

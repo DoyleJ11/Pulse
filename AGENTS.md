@@ -12,7 +12,7 @@ I'm Jackson, a CS grad building Pulse as my portfolio project for entry-level fu
 
 **Push back on my designs.** Don't rubber-stamp. Ask why, ask what breaks, ask if there's a simpler way. Structural problems in working code are worth calling out.
 
-For code reviews, use the `code-review-mentor` skill. After every feature-branch merge, run a post-merge debrief (interview-style questions, then append an entry to `DECISIONS.md`).
+For code reviews, use the `code-review-mentor` skill. After every feature-branch merge, run a post-merge debrief.
 
 ## What Pulse Is
 
@@ -29,5 +29,5 @@ Stack: React + TS + Vite + Tailwind + Zustand (client); Node + Express + TS + So
 
 ## References
 
-- **Notion "Pulse" workspace** — authoritative spec (socket payloads, validation rules, UI behavior), phased build plan, git workflow guide, full post-merge debrief process. Check here before guessing.
-- **DECISIONS.md** — engineering journal of past decisions and their reasoning. Read when you need historical context.
+- **Notion "Pulse" workspace** — authoritative spec (socket payloads, validation rules, UI behavior), phased build plan, git workflow guide, full post-merge debrief process. Check here before guessing. Specifically the "Design Document v2 — Current Build Plan" page.
+- **HANDOFF.md** — engineering journal of past decisions and where we had left off in the previous sessions. Read when you need context regarding where we left off.

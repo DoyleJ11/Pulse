@@ -103,7 +103,10 @@ export function BracketView() {
       const bracketState = resultBracket.state as (BracketSlot | null)[];
       setBracketSlots(bracketState);
     } catch (error) {
-      addError(error, "Could not load the bracket. Please refresh and try again.");
+      addError(
+        error,
+        "Could not load the bracket. Please refresh and try again.",
+      );
     }
   }, [lobbyCode, addError]);
 
@@ -243,7 +246,7 @@ export function BracketView() {
                   style={{
                     left: boundaries[i],
                     width: boundaries[i + 1] - boundaries[i],
-                    backgroundColor: `color-mix(in srgb, ${header.bg} 30%, transparent)`,
+                    backgroundColor: `color-mix(in srgb, ${header.bg} 40%, transparent)`,
                   }}
                 />
               ));

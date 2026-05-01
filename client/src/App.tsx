@@ -1,11 +1,13 @@
 import { Routes, Route } from "react-router";
-import { LandingPage } from "./components/lobby/LandingPage";
+import { HomePage } from "./components/lobby/HomePage";
+import { LobbyCreation } from "./components/lobby/LobbyCreation";
 import { Lobby } from "./components/lobby/Lobby";
 import { PickingFilterPage } from "./components/picking/PickingFilterPage";
 import { useEffect, useRef } from "react";
 import { socket } from "./utils/socket";
 import { useRoomStore } from "./stores/roomStore";
 import { useAuthStore } from "./stores/authStore";
+import type { Role } from "./types/sharedTypes";
 import { useTokenStore } from "./stores/tokenStore";
 import { BracketView } from "./components/bracket/BracketView";
 import { PostGame } from "./components/postgame/PostGame";
@@ -18,6 +20,9 @@ function App() {
   const setHostId = useRoomStore((state) => state.setHostId);
   const token = useTokenStore((state) => state.token);
   const userId = useAuthStore((state) => state.userId);
+  const name = useAuthStore((state) => state.name);
+  const role = useAuthStore((state) => state.role);
+  const setRole = useAuthStore((state) => state.setRole);
   const addToast = useToastStore((state) => state.addToast);
   const addError = useToastStore((state) => state.addError);
   const audioError = useAudioStore((state) => state.error);
@@ -68,6 +73,8 @@ function App() {
     }) => {
       setPlayers(users);
       setHostId(hostId);
+      const me = users.find((u) => u.id === userId);
+      if (me) setRole(me.role as Role);
     };
 
     socket.on("connect", onConnect);
@@ -92,11 +99,23 @@ function App() {
       socket.off("error", onSocketError);
       socket.off("roomState", onRoomState);
     };
-  }, [lobbyCode, userId, token, setPlayers, setHostId, addToast, addError]);
+  }, [
+    lobbyCode,
+    userId,
+    name,
+    token,
+    role,
+    setPlayers,
+    setHostId,
+    setRole,
+    addToast,
+    addError,
+  ]);
 
   return (
     <Routes>
-      <Route path="/" element={<LandingPage />} />
+      <Route path="/" element={<HomePage />} />
+      <Route path="/play" element={<LobbyCreation />} />
       <Route path="/lobby/:code" element={<Lobby />} />
       <Route path="/lobby/:code/picking" element={<PickingFilterPage />} />
       <Route path="/lobby/:code/bracket" element={<BracketView />} />
