@@ -221,7 +221,6 @@ function HeroSection({ goHome }: { goHome: () => void }) {
             style={{ backgroundColor: palette.teal }}
           >
             <div className="absolute -bottom-5 -left-5 w-28 h-28 opacity-60">
-              {/* Star SVG */}
               <DecorativeShape
                 type="diamond"
                 color={palette.lavender}

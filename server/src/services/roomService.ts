@@ -198,25 +198,64 @@ async function checkPlayersSubmitted(roomId: string) {
 }
 
 
+const VALID_ROLES = ["player_a", "player_b", "judge", "spectator"] as const;
+type ValidRole = (typeof VALID_ROLES)[number];
+
+async function changeRole(userId: string, code: string, newRole: unknown) {
+  if (typeof newRole !== "string" || !VALID_ROLES.includes(newRole as ValidRole)) {
+    throw new RoomError("Invalid role.", code, "changeRole");
+  }
+
+  await prisma.$transaction(async (tx) => {
+    const room = await tx.room.findUnique({
+      where: { code: code },
+      include: { players: true },
+    });
+    if (!room) {
+      throw new RoomError(`Cannot find room with code: ${code}`, code, "changeRole");
+    }
+    if (room.status !== "lobby") {
+      throw new RoomError("Roles are locked once the game has started.", code, "changeRole");
+    }
+
+    const me = room.players.find((p) => p.id === userId);
+    if (!me) {
+      throw new RoomError("You're not in this room.", code, "changeRole");
+    }
+    if (me.role === newRole) return;
+
+    if (newRole === "player_a" || newRole === "player_b") {
+      const taken = room.players.some(
+        (p) => p.id !== userId && p.role === newRole,
+      );
+      if (taken) {
+        const label = newRole === "player_a" ? "Player A" : "Player B";
+        throw new RoomError(`${label} is already taken.`, code, "changeRole");
+      }
+    }
+
+    await tx.player.update({
+      where: { id: userId },
+      data: { role: newRole },
+    });
+  });
+}
+
 async function determineRole(room: Room, tx: PrismaTransactionalClient) {
   const players = await tx.player.findMany({
     where: { roomId: room.id },
   });
 
-  const playerCount = players.length;
+  const takenRoles = new Set(players.map((p) => p.role));
 
-  switch (playerCount) {
-    case 1:
-      return "player_b";
-    case 2:
-      return "judge";
-    default:
-      return "spectator";
-  }
+  if (!takenRoles.has("player_a")) return "player_a";
+  if (!takenRoles.has("player_b")) return "player_b";
+  if (!takenRoles.has("judge")) return "judge";
+  return "spectator";
 }
 
 function generateCode() {
   return nanoid(6);
 }
 
-export { createRoom, joinRoom, submitPicks, setToPicking };
+export { createRoom, joinRoom, submitPicks, setToPicking, changeRole };

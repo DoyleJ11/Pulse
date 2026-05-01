@@ -152,11 +152,8 @@ function HeroSection({
 
 function HowItWorksSection() {
   return (
-    <section
-      id="how"
-      className="px-5 py-24 sm:px-10 lg:px-10 lg:pb-10 lg:pt-24"
-    >
-      <div className="mx-auto max-w-[1280px]">
+    <section className="px-5 py-24 sm:px-10 lg:px-10 lg:pb-10 lg:pt-24">
+      <div className="mx-auto max-w-[1280px]" id="how">
         <div className="mb-10 flex flex-col justify-between gap-8 lg:flex-row lg:items-end">
           <div>
             <Pill color={homePalette.teal} className="mb-4">

@@ -7,6 +7,7 @@ import { useEffect, useRef } from "react";
 import { socket } from "./utils/socket";
 import { useRoomStore } from "./stores/roomStore";
 import { useAuthStore } from "./stores/authStore";
+import type { Role } from "./types/sharedTypes";
 import { useTokenStore } from "./stores/tokenStore";
 import { BracketView } from "./components/bracket/BracketView";
 import { PostGame } from "./components/postgame/PostGame";
@@ -21,6 +22,7 @@ function App() {
   const userId = useAuthStore((state) => state.userId);
   const name = useAuthStore((state) => state.name);
   const role = useAuthStore((state) => state.role);
+  const setRole = useAuthStore((state) => state.setRole);
   const addToast = useToastStore((state) => state.addToast);
   const addError = useToastStore((state) => state.addError);
   const audioError = useAudioStore((state) => state.error);
@@ -74,6 +76,8 @@ function App() {
     }) => {
       setPlayers(users);
       setHostId(hostId);
+      const me = users.find((u) => u.id === userId);
+      if (me) setRole(me.role as Role);
     };
 
     socket.on("connect", onConnect);
@@ -106,6 +110,7 @@ function App() {
     role,
     setPlayers,
     setHostId,
+    setRole,
     addToast,
     addError,
   ]);

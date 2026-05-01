@@ -24,7 +24,7 @@ export function HomeButton({
           : "px-[22px] py-3 text-sm [box-shadow:3px_3px_0_#0A0A0A] hover:[box-shadow:4px_4px_0_#0A0A0A] active:[box-shadow:1px_1px_0_#0A0A0A]"
       } ${
         disabled
-          ? "opacity-50 cursor-not-allowed"
+          ? "opacity-50 bg-ink/40 cursor-not-allowed"
           : "opacity-100 cursor-pointer"
       }`}
       onClick={onClick}

@@ -1,9 +1,14 @@
-import { createRoom, joinRoom, submitPicks, setToPicking } from "../services/roomService.js";
+import {
+  createRoom,
+  joinRoom,
+  submitPicks,
+  setToPicking,
+} from "../services/roomService.js";
 import { seedSongs } from "../services/bracketService.js";
 import express from "express";
 import { z } from "zod";
 import { authMiddleware } from "../middleware/auth.js";
-import { asyncHandler } from "../utils/errorHandler.js"
+import { asyncHandler } from "../utils/errorHandler.js";
 import { submissionComplete, startPicking } from "../sockets/roomEvents.js";
 
 const router = express.Router();
@@ -27,67 +32,80 @@ const SongSchema = z.object({
 });
 export type Song = z.infer<typeof SongSchema>;
 
-const SubmissionSchema = z.array(SongSchema).length(8, { message: "Must submit exactly 8 songs."})
+const SubmissionSchema = z
+  .array(SongSchema)
+  .length(8, { message: "Must submit exactly 8 songs." });
 
-router.post("/", asyncHandler(async (req, res) => {
-  const name = NameSchema.parse(req.body.name);
-  const { room, host, token } = await createRoom(name);
-  const response = {
-    id: host.id,
-    code: room.code,
-    name: host.name,
-    role: host.role,
-    jwt: token,
-  };
+router.post(
+  "/",
+  asyncHandler(async (req, res) => {
+    const name = NameSchema.parse(req.body.name);
+    const { room, host, token } = await createRoom(name);
+    const response = {
+      id: host.id,
+      code: room.code,
+      name: host.name,
+      role: host.role,
+      jwt: token,
+    };
 
-  res.json(response);
-}));
+    res.json(response);
+  }),
+);
 
-router.post("/:code/join", asyncHandler(async (req, res) => {
-  const name = NameSchema.parse(req.body.name);
-  const code = CodeSchema.parse(req.params.code);
-  const { room, user, token } = await joinRoom(name, code);
-  const response = {
-    id: user.id,
-    code: room.code,
-    name: user.name,
-    role: user.role,
-    jwt: token,
-  };
-  res.json(response);
-}));
+router.post(
+  "/:code/join",
+  asyncHandler(async (req, res) => {
+    const name = NameSchema.parse(req.body.name);
+    const code = CodeSchema.parse(req.params.code);
+    const { room, user, token } = await joinRoom(name, code);
+    const response = {
+      id: user.id,
+      code: room.code,
+      name: user.name,
+      role: user.role,
+      jwt: token,
+    };
+    res.json(response);
+  }),
+);
 
-router.post("/:code/startPicking", authMiddleware, asyncHandler(async (req, res) => {
-  const code = CodeSchema.parse(req.params.code);
-  const payload = req.user
-  const updatedRoom = await setToPicking(code, payload);
+router.post(
+  "/:code/startPicking",
+  authMiddleware,
+  asyncHandler(async (req, res) => {
+    const code = CodeSchema.parse(req.params.code);
+    const payload = req.user;
+    const updatedRoom = await setToPicking(code, payload);
 
-  const response = {
-    status: updatedRoom.status
-  }
+    const response = {
+      status: updatedRoom.status,
+    };
 
-  startPicking(code, updatedRoom.status)  
-  res.json(response);
-}))
+    startPicking(code, updatedRoom.status);
+    res.json(response);
+  }),
+);
 
-router.post("/:code/picks", authMiddleware, asyncHandler(async (req, res) => {
-  const songs = SubmissionSchema.parse(req.body.songs);
-  const payload = req.user
-  const code = CodeSchema.parse(req.params.code)
-  const {newSongs, bothPlayersReady} = await submitPicks(songs, payload, code);
+router.post(
+  "/:code/picks",
+  authMiddleware,
+  asyncHandler(async (req, res) => {
+    const songs = SubmissionSchema.parse(req.body.songs);
+    const payload = req.user;
+    const code = CodeSchema.parse(req.params.code);
+    const { newSongs, bothPlayersReady } = await submitPicks(
+      songs,
+      payload,
+      code,
+    );
 
-  if (bothPlayersReady) {
-    submissionComplete(code)
-  }
+    if (bothPlayersReady) {
+      submissionComplete(code);
+    }
 
-  res.json(newSongs);
-}));
-
-router.get("/:code/test-seed", asyncHandler(async (req, res) => {
-  const code = CodeSchema.parse(req.params.code)
-  const result = await seedSongs(code);
-  res.json(result);
-}));
-
+    res.json(newSongs);
+  }),
+);
 
 export { router };
