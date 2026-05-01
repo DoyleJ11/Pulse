@@ -43,11 +43,8 @@ function App() {
 
       if (lobbyCode && userId) {
         socket.emit("joinRoom", {
-          id: userId,
           code: lobbyCode,
-          name: name,
           token: token,
-          role: role,
         });
       }
     };

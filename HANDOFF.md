@@ -34,6 +34,8 @@ Latest local commit:
 - `feat/bracket-visual-polish`
 - `chore/centralize-errors`
 
+The trust-boundaries branch still needs PR/merge into `dev` unless already handled after this handoff was written.
+
 ## Recent Work Completed
 
 ### Reconnection / Presence
@@ -78,6 +80,7 @@ Verification run for this branch:
 Start here for most tasks:
 
 - `AGENTS.md` — working style and project rules
+- `DECISIONS.md` — engineering journal
 - `server/src/sockets/roomEvents.ts` — live room events and socket authorization
 - `server/src/services/roomService.ts` — room creation, joining, picking, submission flow
 - `server/src/services/bracketService.ts` — bracket generation and judging state machine
