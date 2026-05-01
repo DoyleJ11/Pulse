@@ -8,10 +8,11 @@ import { CustomError } from "./utils/customErrors.js";
 import { router as roomRouter } from "./routes/rooms.js";
 import { router as searchRouter } from "./routes/search.js";
 import { router as bracketRouter } from "./routes/bracket.js";
-import { env } from "./utils/config.js";
+import { env, isAllowedOrigin } from "./utils/config.js";
 import { ZodError } from "zod";
 import { initSocket } from "./utils/socket.js";
 import http from "node:http";
+import cors from "cors";
 
 const app: Application = express();
 const port = env.PORT;
@@ -19,6 +20,18 @@ const httpServer = http.createServer(app);
 initSocket(httpServer);
 
 app.use(express.json());
+app.use(
+  cors({
+    origin(origin, callback) {
+      if (isAllowedOrigin(origin)) {
+        callback(null, true);
+        return;
+      }
+
+      callback(new Error(`Origin ${origin} is not allowed by CORS`));
+    },
+  }),
+);
 
 app.get("/api/health", (req: Request, res: Response) => {
   res.json({ status: "online" });

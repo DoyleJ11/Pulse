@@ -1,10 +1,10 @@
 import {
   createRoom,
+  getRoomState,
   joinRoom,
   submitPicks,
   setToPicking,
 } from "../services/roomService.js";
-import { seedSongs } from "../services/bracketService.js";
 import express from "express";
 import { z } from "zod";
 import { authMiddleware } from "../middleware/auth.js";
@@ -67,6 +67,17 @@ router.post(
       jwt: token,
     };
     res.json(response);
+  }),
+);
+
+router.get(
+  "/:code/state",
+  authMiddleware,
+  asyncHandler(async (req, res) => {
+    const code = CodeSchema.parse(req.params.code);
+    const roomState = await getRoomState(code, req.user);
+
+    res.json(roomState);
   }),
 );
 

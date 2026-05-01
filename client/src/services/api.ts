@@ -27,6 +27,8 @@ const StatusSchema = z.object({
   ]) satisfies z.ZodType<Status>,
 });
 
+const API_BASE_URL = import.meta.env.VITE_API_URL?.replace(/\/$/, "") ?? "";
+
 async function createRoom(name: string) {
   const body = { name: name };
   const response = await fetchHelper("/api/rooms", "POST", body);
@@ -122,14 +124,51 @@ const BracketSchema = z.object({
   id: z.string(),
   roomId: z.string(),
   state: z.array(z.unknown().nullable()),
-  currentMatchup: z.number(),
+  currentMatchup: z.number().nullable(),
 });
 
-async function fetchBracket(code: string) {
-  const response = await fetchHelper(`/api/rooms/${code}/bracket`, "GET");
+async function fetchBracket(code: string, token: string) {
+  const response = await fetchHelper(
+    `/api/rooms/${code}/bracket`,
+    "GET",
+    undefined,
+    token,
+  );
 
   const data = BracketSchema.parse(await response);
   return data;
+}
+
+const PlayerSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  role: z.string(),
+  connected: z.boolean(),
+  lastSeenAt: z.string(),
+});
+
+const RoomStateSchema = z.object({
+  code: z.string(),
+  status: StatusSchema.shape.status,
+  hostId: z.string(),
+  currentUser: z.object({
+    id: z.string(),
+    name: z.string(),
+    role: RoomSchema.shape.role,
+  }),
+  players: z.array(PlayerSchema),
+  bracket: BracketSchema.nullable(),
+});
+
+async function fetchRoomState(code: string, token: string) {
+  const response = await fetchHelper(
+    `/api/rooms/${code}/state`,
+    "GET",
+    undefined,
+    token,
+  );
+
+  return RoomStateSchema.parse(response);
 }
 
 async function fetchHelper(
@@ -148,10 +187,10 @@ async function fetchHelper(
 
   let response: Response;
   try {
-    response = await fetch(url, {
+    response = await fetch(`${API_BASE_URL}${url}`, {
       method: method,
       headers: headers,
-      body: JSON.stringify(body),
+      body: body ? JSON.stringify(body) : undefined,
     });
   } catch {
     throw new Error("Could not reach the server. Check your connection and try again.");
@@ -199,4 +238,5 @@ export {
   startPicking,
   submitPicks,
   fetchBracket,
+  fetchRoomState,
 };

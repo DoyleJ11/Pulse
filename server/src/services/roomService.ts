@@ -9,6 +9,9 @@ import { type Song } from "../routes/rooms.js";
 import type { Payload } from "../utils/authUtils.js";
 import { seedSongs } from "./bracketService.js";
 
+const INCOMPLETE_ROOM_TTL_MS = 24 * 60 * 60 * 1000;
+const COMPLETE_ROOM_TTL_MS = 7 * 24 * 60 * 60 * 1000;
+
 async function createRoom(name: string) {
   const roomCode = generateCode();
   const hostId = crypto.randomUUID();
@@ -52,6 +55,9 @@ async function joinRoom(name: string, code: string) {
     if (!room) {
       throw new RoomError(`Cannot find room with code: ${code}`, code, "join");
     }
+    if (isRoomStale(room)) {
+      throw new RoomError("This room has expired. Please create a new room.", code, "join");
+    }
     if (room.status !== "lobby") {
       throw new RoomError(`Cannot join a room in progress.`, code, "join");
     }
@@ -79,6 +85,46 @@ async function joinRoom(name: string, code: string) {
   });
 
   return result;
+}
+
+async function getRoomState(code: string, user: Payload) {
+  const room = await prisma.room.findUnique({
+    where: { id: user.roomId },
+    include: {
+      players: {
+        omit: { roomId: true },
+      },
+      bracket: true,
+    },
+  });
+
+  if (!room) {
+    throw new RoomError(`Cannot find room with id: ${user.roomId}`, code, "state");
+  }
+  if (room.code !== code) {
+    throw new RoomError(`Provided code does not match user's room code: ${code}`, code, "state");
+  }
+  if (isRoomStale(room)) {
+    throw new RoomError("This room has expired. Please create a new room.", code, "state");
+  }
+
+  const currentUser = room.players.find((player) => player.id === user.userId);
+  if (!currentUser) {
+    throw new RoomError("Your session no longer belongs to this room.", code, "state");
+  }
+
+  return {
+    code: room.code,
+    status: room.status,
+    hostId: room.hostId,
+    currentUser: {
+      id: currentUser.id,
+      name: currentUser.name,
+      role: currentUser.role,
+    },
+    players: room.players,
+    bracket: room.bracket,
+  };
 }
 
 async function setToPicking(code: string, user: Payload) {
@@ -258,4 +304,51 @@ function generateCode() {
   return nanoid(6);
 }
 
-export { createRoom, joinRoom, submitPicks, setToPicking, changeRole };
+function isRoomStale(room: Pick<Room, "createdAt" | "status">) {
+  const ageMs = Date.now() - room.createdAt.getTime();
+  const ttlMs = room.status === "complete" ? COMPLETE_ROOM_TTL_MS : INCOMPLETE_ROOM_TTL_MS;
+
+  return ageMs > ttlMs;
+}
+
+async function cleanupExpiredRooms() {
+  const rooms = await prisma.room.findMany({
+    select: {
+      id: true,
+      createdAt: true,
+      status: true,
+    },
+  });
+  const expiredRoomIds = rooms.filter(isRoomStale).map((room) => room.id);
+
+  if (expiredRoomIds.length === 0) {
+    return { deletedRooms: 0 };
+  }
+
+  await prisma.$transaction(async (tx) => {
+    await tx.bracket.deleteMany({
+      where: { roomId: { in: expiredRoomIds } },
+    });
+    await tx.song.deleteMany({
+      where: { player: { roomId: { in: expiredRoomIds } } },
+    });
+    await tx.player.deleteMany({
+      where: { roomId: { in: expiredRoomIds } },
+    });
+    await tx.room.deleteMany({
+      where: { id: { in: expiredRoomIds } },
+    });
+  });
+
+  return { deletedRooms: expiredRoomIds.length };
+}
+
+export {
+  createRoom,
+  joinRoom,
+  submitPicks,
+  setToPicking,
+  changeRole,
+  getRoomState,
+  cleanupExpiredRooms,
+};

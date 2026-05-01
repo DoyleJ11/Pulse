@@ -126,8 +126,6 @@ function RoleDropdown({
 
 export function Lobby() {
   const navigate = useNavigate();
-  const name = useAuthStore((state) => state.name);
-  const role = useAuthStore((state) => state.role);
   const token = useTokenStore((state) => state.token);
   const userId = useAuthStore((state) => state.userId);
   const playerList = useRoomStore((state) => state.players);

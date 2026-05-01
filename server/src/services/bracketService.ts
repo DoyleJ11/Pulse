@@ -2,6 +2,7 @@ import { prisma } from "../utils/prisma.js";
 import { Prisma } from "../../generated/prisma/client.js";
 import { RoomError } from "../utils/customErrors.js";
 import type { Player, Song } from "../../generated/prisma/client.js";
+import type { Payload } from "../utils/authUtils.js";
 
 // Round 1:      indicies 15-30
 // Round 2:      indicies 7-14
@@ -164,12 +165,15 @@ async function generateBracket(
   return result;
 }
 
-async function fetchBracket(code: string) {
+async function fetchBracket(code: string, user?: Payload) {
   const room = await prisma.room.findUnique({
     where: { code: code },
   });
   if (!room) {
     throw new RoomError(`Cannot find room`, code, "battling");
+  }
+  if (user && room.id !== user.roomId) {
+    throw new RoomError("Session does not match this room", code, "battling");
   }
 
   const bracket = await prisma.bracket.findUnique({

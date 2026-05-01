@@ -1,6 +1,6 @@
 import { Nav } from "../ui/Nav";
 import { HomeButton } from "../home/HomeButton";
-import { ArrowRight, ArrowLeft, Home } from "lucide-react";
+import { ArrowRight, ArrowLeft } from "lucide-react";
 import { DecorativeShape, FloatingShape } from "../home/DecorativeShape";
 import { useState } from "react";
 import { createRoom, joinRoom } from "../../services/api";
