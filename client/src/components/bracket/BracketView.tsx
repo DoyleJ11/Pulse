@@ -15,6 +15,7 @@ import { PermissionGuard } from "../util/PermissionGuard";
 import { usePresence } from "../../hooks/usePresence";
 import { useNavigate } from "react-router";
 import { useToastStore } from "../../stores/toastStore";
+import { useTokenStore } from "../../stores/tokenStore";
 
 interface Bracket {
   id: string;
@@ -76,6 +77,7 @@ const HEADERS = [
 export function BracketView() {
   const navigate = useNavigate();
   const lobbyCode = useRoomStore((state) => state.code);
+  const token = useTokenStore((state) => state.token);
   const players = useRoomStore((state) => state.players);
   const playerA = players.find((p) => p.role === "player_a");
   const playerB = players.find((p) => p.role === "player_b");
@@ -98,7 +100,7 @@ export function BracketView() {
 
   const getBracket = useCallback(async () => {
     try {
-      const resultBracket = await fetchBracket(lobbyCode);
+      const resultBracket = await fetchBracket(lobbyCode, token);
       setBracket(resultBracket);
       const bracketState = resultBracket.state as (BracketSlot | null)[];
       setBracketSlots(bracketState);
@@ -108,7 +110,7 @@ export function BracketView() {
         "Could not load the bracket. Please refresh and try again.",
       );
     }
-  }, [lobbyCode, addError]);
+  }, [lobbyCode, token, addError]);
 
   useEffect(() => {
     socket.on("bracketUpdated", ({ state, currentMatchup }) => {

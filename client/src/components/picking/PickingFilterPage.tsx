@@ -24,7 +24,7 @@ export function PickingFilterPage() {
         return () => {
             socket.off("submissionComplete")
         }
-    }, [])
+    }, [clearSongs, lobbyCode, navigate, setLockIn])
 
 return (
     <>

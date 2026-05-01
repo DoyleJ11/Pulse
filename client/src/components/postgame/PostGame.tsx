@@ -20,6 +20,7 @@ export function PostGame() {
   const clearToken = useTokenStore((state) => state.clearToken);
   const clearSongs = useSongStore((state) => state.clearSongs);
   const addError = useToastStore((state) => state.addError);
+  const token = useTokenStore((state) => state.token);
 
   const [bracketSlots, setBracketSlots] = useState<(BracketSlot | null)[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -32,7 +33,7 @@ export function PostGame() {
         return;
       }
       try {
-        const result = await fetchBracket(lobbyCode);
+        const result = await fetchBracket(lobbyCode, token);
         if (cancelled) return;
         setBracketSlots(result.state as (BracketSlot | null)[]);
       } catch (err) {
@@ -46,7 +47,7 @@ export function PostGame() {
     return () => {
       cancelled = true;
     };
-  }, [lobbyCode, addError]);
+  }, [lobbyCode, token, addError]);
 
   const champion = bracketSlots[0] ?? null;
   const decidedCount = bracketSlots

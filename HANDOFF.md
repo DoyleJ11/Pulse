@@ -1,6 +1,6 @@
 # Pulse — Codex Handoff
 
-Last updated: 2026-04-27
+Last updated: 2026-05-01
 
 ## Project Snapshot
 
@@ -22,11 +22,11 @@ Core architecture decisions:
 
 ## Current Branch State
 
-Current branch: `refactor/trust-boundaries`
+Current branch: `chore/prod-prep`
 
 Latest local commit:
 
-- `e12f96a hardened realtime trust boundaries`
+- Not checked during this handoff update.
 
 `dev` currently includes these recently merged squash PRs:
 
@@ -34,7 +34,7 @@ Latest local commit:
 - `feat/bracket-visual-polish`
 - `chore/centralize-errors`
 
-The trust-boundaries branch still needs PR/merge into `dev` unless already handled after this handoff was written.
+Production-prep work is in progress on this branch.
 
 ## Recent Work Completed
 
@@ -75,6 +75,30 @@ Verification run for this branch:
 - `client`: `npm run build` passes
 - `client`: `npm run lint` has 0 errors and 1 existing hook dependency warning in `PickingFilterPage.tsx`
 
+### Production Runtime Prep
+
+Implemented on current `chore/prod-prep` branch:
+
+- Removed stale required Spotify env vars from runtime config.
+- Added `ALLOWED_ORIGINS` parsing for production CORS.
+- Applied Express `cors()` before API routes.
+- Configured Socket.IO with the same allowed origin list.
+- Added client `VITE_API_URL` and `VITE_SOCKET_URL` support.
+- Added server production build/start/migration scripts.
+- Added `GET /api/rooms/:code/state` for server-backed refresh recovery.
+- Protected `GET /api/rooms/:code/bracket` with JWT auth.
+- Added stale room policy: incomplete rooms expire after 24 hours, completed rooms after 7 days.
+- Added manual expired-room cleanup command.
+- Added `.env.example` files, `README.md`, and `DECISIONS.md`.
+
+Verification run for this branch:
+
+- `server`: `npm run build` passes
+- `server`: `npm run test:run` passes
+- `server`: `npx tsc --noEmit` passes
+- `client`: `npm run lint` passes
+- `client`: `npm run build` passes
+
 ## Key Files
 
 Start here for most tasks:
@@ -95,20 +119,18 @@ Start here for most tasks:
 
 Highest priority before real-user deploy:
 
-- Merge `refactor/trust-boundaries` into `dev`.
-- Remove or protect `GET /api/rooms/:code/test-seed`.
-- Add production CORS and Socket.IO origin configuration.
-- Add deploy/runtime config for hosted server, client, and Postgres.
-- Remove unused Spotify env requirements if Deezer-only for v1.
-- Add reliable refresh/rejoin/current-state recovery across lobby, picking, bracket, and postgame.
+- Run final verification for production-prep branch.
+- Deploy server and Postgres on Railway.
+- Deploy client on Vercel.
+- Add deployed Vercel URL to server `ALLOWED_ORIGINS`.
+- Complete three-device hosted E2E test from create room through postgame.
+- Add deeper socket/service tests for authorization and room flow.
 
 Important reliability work:
 
-- Handle stale local/session storage cleanly.
-- Add room lifecycle cleanup/expiration.
 - Improve loading/empty states for search, bracket, and waiting screens.
 - Avoid repeated toast spam from one failing audio preview.
-- Add socket/service tests for authorization and room flow.
+- Automate expired room cleanup after manual cleanup proves sufficient.
 
 Deferred intentionally:
 
@@ -131,8 +153,11 @@ npm run lint
 From `server/`:
 
 ```bash
+npm run build
 npm run test:run
 npx tsc --noEmit
+npm run migrate:deploy
+npm run cleanup:rooms
 ```
 
 GitHub PR flow used recently:

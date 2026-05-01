@@ -1,4 +1,4 @@
-import { Routes, Route } from "react-router";
+import { Routes, Route, useNavigate } from "react-router";
 import { HomePage } from "./components/lobby/HomePage";
 import { LobbyCreation } from "./components/lobby/LobbyCreation";
 import { Lobby } from "./components/lobby/Lobby";
@@ -13,16 +13,27 @@ import { BracketView } from "./components/bracket/BracketView";
 import { PostGame } from "./components/postgame/PostGame";
 import { useToastStore } from "./stores/toastStore";
 import { useAudioStore } from "./stores/audioStore";
+import { fetchRoomState } from "./services/api";
+import { useSongStore } from "./stores/songStore";
+import type { Status } from "./types/sharedTypes";
 
 function App() {
+  const navigate = useNavigate();
   const lobbyCode = useRoomStore((state) => state.code);
+  const setCode = useRoomStore((state) => state.setCode);
   const setPlayers = useRoomStore((state) => state.setPlayers);
   const setHostId = useRoomStore((state) => state.setHostId);
+  const setStatus = useRoomStore((state) => state.setStatus);
+  const clearRoom = useRoomStore((state) => state.clearRoom);
   const token = useTokenStore((state) => state.token);
+  const clearToken = useTokenStore((state) => state.clearToken);
   const userId = useAuthStore((state) => state.userId);
   const name = useAuthStore((state) => state.name);
   const role = useAuthStore((state) => state.role);
+  const setAuth = useAuthStore((state) => state.setAuth);
   const setRole = useAuthStore((state) => state.setRole);
+  const clearSession = useAuthStore((state) => state.clearSession);
+  const clearSongs = useSongStore((state) => state.clearSongs);
   const addToast = useToastStore((state) => state.addToast);
   const addError = useToastStore((state) => state.addError);
   const audioError = useAudioStore((state) => state.error);
@@ -33,6 +44,69 @@ function App() {
       addToast(audioError, "error");
     }
   }, [audioError, addToast]);
+
+  useEffect(() => {
+    if (!lobbyCode) return;
+
+    if (!token) {
+      clearSession();
+      clearRoom();
+      clearSongs();
+      return;
+    }
+
+    let cancelled = false;
+
+    (async () => {
+      try {
+        const roomState = await fetchRoomState(lobbyCode, token);
+        if (cancelled) return;
+
+        setCode(roomState.code);
+        setAuth(
+          roomState.currentUser.name,
+          roomState.currentUser.role,
+          roomState.currentUser.id,
+        );
+        setPlayers(roomState.players);
+        setHostId(roomState.hostId);
+        setStatus(roomState.status);
+        navigate(getRoomPath(roomState.code, roomState.status), {
+          replace: true,
+        });
+      } catch (error) {
+        if (cancelled) return;
+
+        clearSession();
+        clearRoom();
+        clearToken();
+        clearSongs();
+        addError(
+          error,
+          "Your saved room session could not be restored. Please join again.",
+        );
+        navigate("/", { replace: true });
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [
+    lobbyCode,
+    token,
+    setCode,
+    setAuth,
+    setPlayers,
+    setHostId,
+    setStatus,
+    clearSession,
+    clearRoom,
+    clearToken,
+    clearSongs,
+    addError,
+    navigate,
+  ]);
 
   useEffect(() => {
     const onConnect = () => {
@@ -122,6 +196,14 @@ function App() {
       <Route path="/lobby/:code/postgame" element={<PostGame />} />
     </Routes>
   );
+}
+
+function getRoomPath(code: string, status: Status) {
+  if (status === "picking") return `/lobby/${code}/picking`;
+  if (status === "battling") return `/lobby/${code}/bracket`;
+  if (status === "complete") return `/lobby/${code}/postgame`;
+
+  return `/lobby/${code}`;
 }
 
 export default App;
