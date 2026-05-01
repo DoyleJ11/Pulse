@@ -16,7 +16,10 @@ import {
 } from "../services/bracketService.js";
 import { changeRole } from "../services/roomService.js";
 
-const CodeSchema = z.string().trim().length(6, "Room code must be 6 characters");
+const CodeSchema = z
+  .string()
+  .trim()
+  .length(6, "Room code must be 6 characters");
 
 const JoinRoomSchema = z.object({
   code: CodeSchema,
@@ -96,15 +99,12 @@ function registerRoomEvents(io: Server, socket: Socket) {
 
   socket.on("changeRole", async (data) => {
     try {
-      const { code, userId } = socket.data;
-      if (!code || !userId) {
-        throw new Error("Not joined to a room");
-      }
+      const session = requireSocketSession(socket);
 
-      await changeRole(userId, code, data?.newRole);
+      await changeRole(session.userId, session.code, data?.newRole);
 
-      const users = await getAllUsers(code);
-      io.to(code).emit("roomState", {
+      const users = await getAllUsers(session.code);
+      io.to(session.code).emit("roomState", {
         users: users.players,
         hostId: users.hostId,
       });
