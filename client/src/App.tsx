@@ -1,4 +1,4 @@
-import { Routes, Route, useNavigate } from "react-router";
+import { Routes, Route, useLocation, useNavigate } from "react-router";
 import { HomePage } from "./components/lobby/HomePage";
 import { LobbyCreation } from "./components/lobby/LobbyCreation";
 import { Lobby } from "./components/lobby/Lobby";
@@ -16,9 +16,11 @@ import { useAudioStore } from "./stores/audioStore";
 import { fetchRoomState } from "./services/api";
 import { useSongStore } from "./stores/songStore";
 import type { Status } from "./types/sharedTypes";
+import { consumeIntentionalDisconnect } from "./utils/socketIntent";
 
 function App() {
   const navigate = useNavigate();
+  const location = useLocation();
   const lobbyCode = useRoomStore((state) => state.code);
   const setCode = useRoomStore((state) => state.setCode);
   const setPlayers = useRoomStore((state) => state.setPlayers);
@@ -71,7 +73,7 @@ function App() {
         setPlayers(roomState.players);
         setHostId(roomState.hostId);
         setStatus(roomState.status);
-        navigate(getRoomPath(roomState.code, roomState.status), {
+        navigate(getRoomPath(roomState.code, roomState.status, location.pathname), {
           replace: true,
         });
       } catch (error) {
@@ -105,6 +107,7 @@ function App() {
     clearToken,
     clearSongs,
     addError,
+    location.pathname,
     navigate,
   ]);
 
@@ -124,6 +127,11 @@ function App() {
     };
 
     const onDisconnect = () => {
+      if (consumeIntentionalDisconnect()) {
+        wasDisconnectedRef.current = false;
+        return;
+      }
+
       if (lobbyCode && userId) {
         wasDisconnectedRef.current = true;
         addToast("Connection lost. Trying to reconnect...", "warning");
@@ -198,10 +206,20 @@ function App() {
   );
 }
 
-function getRoomPath(code: string, status: Status) {
+function getRoomPath(code: string, status: Status, currentPath: string) {
+  if (status === "complete") {
+    const bracketPath = `/lobby/${code}/bracket`;
+    const postgamePath = `/lobby/${code}/postgame`;
+
+    if (currentPath === bracketPath || currentPath === postgamePath) {
+      return currentPath;
+    }
+
+    return postgamePath;
+  }
+
   if (status === "picking") return `/lobby/${code}/picking`;
   if (status === "battling") return `/lobby/${code}/bracket`;
-  if (status === "complete") return `/lobby/${code}/postgame`;
 
   return `/lobby/${code}`;
 }

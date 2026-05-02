@@ -2,9 +2,11 @@ import { type BracketSlot } from "./BracketView";
 import { PlayerChip } from "./PlayerChip";
 import { usePresence } from "../../hooks/usePresence";
 import type { Player } from "../../stores/roomStore";
+import { Crown } from "lucide-react";
 
 interface BracketHeaderProps {
   matchupSongs: [BracketSlot, BracketSlot] | null;
+  champion: BracketSlot | null;
   judge: Player;
   playerA: Player;
   playerB: Player;
@@ -12,6 +14,7 @@ interface BracketHeaderProps {
 
 export function BracketHeader({
   matchupSongs,
+  champion,
   judge,
   playerA,
   playerB,
@@ -44,7 +47,24 @@ export function BracketHeader({
           </div>
         </div>
 
-        {matchupSongs && (
+        {champion ? (
+          <div className="flex min-w-[320px] items-center gap-3 rounded-[20px] border-2 border-solid border-text-primary bg-[#FFD952] px-[22px] py-4 shadow-[3px_3px_0_0_#0A0A0A]">
+            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border-2 border-black bg-black">
+              <Crown
+                className="h-5 w-5 fill-[#FFD952] text-[#FFD952]"
+                strokeWidth={0}
+              />
+            </span>
+            <div>
+              <div className="text-xs font-bold tracking-widest text-text-primary/60 font-mono uppercase">
+                CHAMPION CROWNED
+              </div>
+              <div className="mt-1 max-w-[320px] truncate text-xl font-black">
+                {champion.title}
+              </div>
+            </div>
+          </div>
+        ) : matchupSongs ? (
           <div className="min-w-[320px] flex items-center gap-3 bg-white border-2 border-solid border-text-primary rounded-[20px] py-4 px-[22px] shadow-[3px_3px_0_0_#0A0A0A]">
             <span className="w-3 h-3 rounded-full bg-[#FF7B6B] border-[1.5px] border-solid border-text-primary animate-pulse-dot shrink-0"></span>
             <div>
@@ -64,7 +84,7 @@ export function BracketHeader({
               </div>
             </div>
           </div>
-        )}
+        ) : null}
       </div>
     </div>
   );

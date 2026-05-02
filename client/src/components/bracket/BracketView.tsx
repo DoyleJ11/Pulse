@@ -16,6 +16,7 @@ import { usePresence } from "../../hooks/usePresence";
 import { useNavigate } from "react-router";
 import { useToastStore } from "../../stores/toastStore";
 import { useTokenStore } from "../../stores/tokenStore";
+import { PreviewAlbumArt } from "../ui/PreviewAlbumArt";
 
 interface Bracket {
   id: string;
@@ -221,6 +222,7 @@ export function BracketView() {
       <Nav rightSlot={<BracketProgress decided={decidedCount} total={15} />} />
       <BracketHeader
         matchupSongs={matchupSongs}
+        champion={champion}
         judge={judge}
         playerA={playerA}
         playerB={playerB}
@@ -362,16 +364,18 @@ export function BracketView() {
                 {champion ? (
                   <div className="bg-[#FFD952] border-[3px] border-black rounded-3xl p-8 shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]">
                     <div
-                      className="text-4xl font-black text-black uppercase tracking-tight mb-4"
+                      className="mb-4 text-center text-4xl font-black uppercase tracking-tight text-black"
                       style={{ fontStretch: "condensed" }}
                     >
                       CHAMPION
                     </div>
                     <div className="flex items-center gap-6">
-                      <img
-                        src={champion.albumArt}
-                        alt={champion.title}
-                        className="w-24 h-24 rounded-2xl object-cover border-[3px] border-black"
+                      <PreviewAlbumArt
+                        songId={champion.songId}
+                        previewUrl={champion.previewUrl}
+                        albumArt={champion.albumArt}
+                        title={champion.title}
+                        className="h-24 w-24 rounded-2xl border-[3px] border-black"
                       />
                       <div className="flex-1">
                         <div className="text-2xl font-black text-black mb-1">

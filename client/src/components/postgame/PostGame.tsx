@@ -3,22 +3,17 @@ import { useNavigate } from "react-router";
 import { Crown } from "lucide-react";
 import { fetchBracket } from "../../services/api";
 import { useRoomStore } from "../../stores/roomStore";
-import { useAuthStore } from "../../stores/authStore";
 import { useTokenStore } from "../../stores/tokenStore";
-import { useSongStore } from "../../stores/songStore";
 import { useToastStore } from "../../stores/toastStore";
-import { socket } from "../../utils/socket";
 import { type BracketSlot } from "../bracket/BracketView";
 import { formatDuration } from "../../utils/formatDuration";
+import { leaveCurrentRoom } from "../../utils/leaveRoom";
+import { PreviewAlbumArt } from "../ui/PreviewAlbumArt";
 
 export function PostGame() {
   const navigate = useNavigate();
   const lobbyCode = useRoomStore((state) => state.code);
   const players = useRoomStore((state) => state.players);
-  const clearRoom = useRoomStore((state) => state.clearRoom);
-  const clearSession = useAuthStore((state) => state.clearSession);
-  const clearToken = useTokenStore((state) => state.clearToken);
-  const clearSongs = useSongStore((state) => state.clearSongs);
   const addError = useToastStore((state) => state.addError);
   const token = useTokenStore((state) => state.token);
 
@@ -58,11 +53,7 @@ export function PostGame() {
     : null;
 
   const handleBackToHome = () => {
-    socket.disconnect();
-    clearSession();
-    clearRoom();
-    clearToken();
-    clearSongs();
+    leaveCurrentRoom();
     navigate("/");
   };
 
@@ -125,16 +116,18 @@ function ChampionHero({
       </div>
 
       <div
-        className="text-2xl font-black text-black/70 uppercase tracking-[0.32em]"
+        className="w-full text-center text-2xl font-black text-black/70 uppercase tracking-[0.28em]"
         style={{ fontStretch: "condensed" }}
       >
         Champion
       </div>
 
-      <img
-        src={champion.albumArt}
-        alt={champion.title}
-        className="w-40 h-40 rounded-2xl object-cover border-[3px] border-black shadow-[4px_4px_0_#0A0A0A]"
+      <PreviewAlbumArt
+        songId={champion.songId}
+        previewUrl={champion.previewUrl}
+        albumArt={champion.albumArt}
+        title={champion.title}
+        className="h-40 w-40 rounded-2xl border-[3px] border-black shadow-[4px_4px_0_#0A0A0A]"
       />
 
       <div className="flex flex-col gap-1">

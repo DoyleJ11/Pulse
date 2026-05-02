@@ -102,6 +102,11 @@ function registerRoomEvents(io: Server, socket: Socket) {
       const session = requireSocketSession(socket);
 
       await changeRole(session.userId, session.code, data?.newRole);
+      const updatedRole = await getUserRoleById(session.userId);
+      socket.data.session = {
+        ...session,
+        role: updatedRole,
+      } satisfies SocketSession;
 
       const users = await getAllUsers(session.code);
       io.to(session.code).emit("roomState", {

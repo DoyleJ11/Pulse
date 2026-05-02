@@ -12,6 +12,7 @@ import { useTokenStore } from "../../stores/tokenStore";
 import { type Role, type Status } from "../../types/sharedTypes";
 import { useToastStore } from "../../stores/toastStore";
 import { FloatingShape } from "../home/DecorativeShape";
+import { leaveCurrentRoom } from "../../utils/leaveRoom";
 
 const palette = {
   coral: "var(--color-section-coral)",
@@ -132,6 +133,7 @@ export function Lobby() {
   const hostId = useRoomStore((state) => state.hostId);
   const setStatus = useRoomStore((state) => state.setStatus);
   const lobbyCode = useRoomStore((state) => state.code);
+  const addToast = useToastStore((state) => state.addToast);
   const addError = useToastStore((state) => state.addError);
 
   useEffect(() => {
@@ -173,6 +175,15 @@ export function Lobby() {
     } catch (error) {
       addError(error, "Couldn't copy the code. Try selecting it manually.");
     }
+  };
+
+  const handleLeaveRoom = () => {
+    leaveCurrentRoom();
+    navigate("/");
+  };
+
+  const handleSettingsClick = () => {
+    addToast("Room settings are coming later.", "info");
   };
 
   const activePlayers = playerList.filter((p) => p.role !== "spectator");
@@ -242,6 +253,8 @@ export function Lobby() {
             </button>
             <button
               className={`inline-flex items-center justify-center w-10 h-10 p-0 bg-white border-2 border-text-primary rounded-xl cursor-pointer shadow-[${smallShadow}]`}
+              onClick={handleSettingsClick}
+              aria-label="Room settings"
             >
               <Settings aria-hidden="true" size={24} strokeWidth={2} />
             </button>
@@ -249,7 +262,7 @@ export function Lobby() {
             <HomeButton
               size="medium"
               variant="light"
-              onClick={() => console.log("leave")}
+              onClick={handleLeaveRoom}
             >
               <span className="uppercase text-sm">LEAVE</span>
             </HomeButton>

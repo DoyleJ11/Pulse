@@ -1,6 +1,6 @@
 # Pulse — Codex Handoff
 
-Last updated: 2026-05-01
+Last updated: 2026-05-02
 
 ## Project Snapshot
 
@@ -22,11 +22,11 @@ Core architecture decisions:
 
 ## Current Branch State
 
-Current branch: `chore/prod-prep`
+Current branch: `dev`
 
 Latest local commit:
 
-- Not checked during this handoff update.
+- `47ae6b0 Fixed change role bug`
 
 `dev` currently includes these recently merged squash PRs:
 
@@ -34,7 +34,7 @@ Latest local commit:
 - `feat/bracket-visual-polish`
 - `chore/centralize-errors`
 
-Production-prep work is in progress on this branch.
+Deployment bug-fix work is in progress on this branch.
 
 ## Recent Work Completed
 
@@ -99,6 +99,27 @@ Verification run for this branch:
 - `client`: `npm run lint` passes
 - `client`: `npm run build` passes
 
+### Deployment Test Bug Fixes
+
+Implemented on current `dev` branch:
+
+- Added Vercel SPA rewrite config so direct refreshes on `/play` and `/lobby/...` serve `index.html`.
+- Adjusted room recovery routing so completed rooms can remain on either bracket or postgame.
+- Added intentional-disconnect handling so Leave / Back to Home do not show false connection-loss and reconnection toasts.
+- Wired lobby Leave button to clear local session and return home.
+- Wired lobby Settings button to an informational toast until real settings exist.
+- Extracted shared preview album art UI and reused it on matchup cards, bracket champion card, and postgame champion card.
+- Added a champion-crowned state to the bracket header.
+- Updated socket session role after `changeRole` so later player/judge authorization uses the new role.
+
+Verification run for this branch:
+
+- `client`: `npm run lint` passes
+- `client`: `npm run build` passes
+- `server`: `npm run build` passes
+- `server`: `npm run test:run` passes
+- `server`: `npx tsc --noEmit` passes
+
 ## Key Files
 
 Start here for most tasks:
@@ -119,11 +140,8 @@ Start here for most tasks:
 
 Highest priority before real-user deploy:
 
-- Run final verification for production-prep branch.
-- Deploy server and Postgres on Railway.
-- Deploy client on Vercel.
-- Add deployed Vercel URL to server `ALLOWED_ORIGINS`.
-- Complete three-device hosted E2E test from create room through postgame.
+- Deploy latest `dev` / merged branch to Railway and Vercel.
+- Complete hosted E2E bug-regression pass from lobby through postgame.
 - Add deeper socket/service tests for authorization and room flow.
 
 Important reliability work:

@@ -1,9 +1,8 @@
-import { Play, Pause, Loader2 } from "lucide-react";
 import { type BracketSlot } from "./BracketView";
 import { PermissionGuard } from "../util/PermissionGuard";
-import { useAudioPlayer } from "../../hooks/useAudioPlayer";
 import { CARD_H } from "./bracketLayout";
 import { formatDuration } from "../../utils/formatDuration";
+import { PreviewAlbumArt } from "../ui/PreviewAlbumArt";
 
 interface SongCardProps {
   song: BracketSlot | null;
@@ -26,10 +25,6 @@ export function MatchupCard({
     semi: "w-[437px]",
     final: "w-[473px]",
   };
-
-  const { toggle, isPlayingSong, isLoading } = useAudioPlayer();
-  const isThisPlaying = song ? isPlayingSong(song.songId) : false;
-  const isThisLoading = isLoading && isThisPlaying;
 
   // Render TBD if null
   if (state === "empty" || !song) {
@@ -91,38 +86,14 @@ export function MatchupCard({
           {/* Card content */}
           <div className="flex-1 flex items-center gap-3 p-4 min-w-0">
             {/* Album play btn overlay */}
-            <div className="relative shrink-0">
-              <img
-                src={song.albumArt}
-                alt={song.title}
-                className="w-16 h-16 rounded-lg object-cover border-[3px] border-black"
-              />
-
-              <button
-                className={`absolute inset-0 bg-black/30 rounded-lg flex items-center justify-center hover:bg-black/50 transition-colors group cursor-pointer`}
-                disabled={!song.previewUrl}
-                onClick={() =>
-                  song.previewUrl && toggle(song.songId, song.previewUrl)
-                }
-                aria-label={isThisPlaying ? "Pause preview" : "Play preview"}
-              >
-                <div className="w-8 h-8 bg-white rounded-full flex items-center justify-center group-hover:scale-110 transition-transform">
-                  {isThisLoading ? (
-                    <Loader2 className="w-4 h-4 text-black animate-spin" />
-                  ) : isThisPlaying ? (
-                    <Pause
-                      className="w-4 h-4 text-black fill-black"
-                      strokeWidth={0}
-                    />
-                  ) : (
-                    <Play
-                      className="w-4 h-4 text-black fill-black ml-0.5"
-                      strokeWidth={0}
-                    />
-                  )}
-                </div>
-              </button>
-            </div>
+            <PreviewAlbumArt
+              songId={song.songId}
+              previewUrl={song.previewUrl}
+              albumArt={song.albumArt}
+              title={song.title}
+              className="h-16 w-16 rounded-lg border-[3px] border-black"
+              showOverlayByDefault
+            />
 
             {/* Song info */}
             <div className="flex-1 min-w-0">
