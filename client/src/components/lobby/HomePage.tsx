@@ -66,7 +66,7 @@ function HeroSection({
   onHowItWorks: () => void;
 }) {
   return (
-    <section className="relative px-10 pt-10 pb-20 overflow-hidden">
+    <section className="relative px-5 md:px-10 pt-10 pb-20 overflow-hidden">
       <div className="absolute inset-0 pointer-events-none overflow-hidden z-0">
         <FloatingShape
           type="circle"
@@ -86,19 +86,19 @@ function HeroSection({
       </div>
 
       <div className="relative z-2 max-w-[1280px] my-0 mx-auto">
-        <div className="grid gap-12 grid-cols-[1.25fr_1fr] items-center">
+        <div className="flex flex-col gap-10 md:grid md:grid-cols-[1.25fr_1fr] md:gap-12 md:items-center">
           <div>
-            <div className="flex gap-2 mb-6">
+            <div className="flex gap-2 mb-6 flex-wrap">
               <Pill color={homePalette.lavender}>● 3-player party game</Pill>
               <Pill color={homePalette.golden}>No install</Pill>
             </div>
 
-            <h1 className="text-[clamp(72px,10vw,148px)] mx-0 mt-0 mb-5 font-black uppercase leading-[0.92] tracking-tight">
+            <h1 className="text-[clamp(56px,12vw,148px)] mx-0 mt-0 mb-5 font-black uppercase leading-[0.92] tracking-tight">
               <span>Whose</span>
               <br />
               <span className="inline-flex items-center gap-4.5">
                 Taste{" "}
-                <span className="inline-block bg-section-coral border-3 border-black rounded-3xl px-5.5 py-1.5 -rotate-3 text-[0.7em] shadow-[6px_6px_0_#0A0A0A]">
+                <span className="inline-block bg-section-coral border-3 border-black rounded-3xl px-5.5 py-1.5 -rotate-3 text-[0.6em] shadow-[6px_6px_0_#0A0A0A]">
                   Wins?
                 </span>
               </span>
@@ -109,7 +109,7 @@ function HeroSection({
               judges. Loud arguments guaranteed.
             </p>
 
-            <div className="flex flex-wrap gap-3.5">
+            <div className="flex flex-wrap gap-3.5 w-full sm:w-auto">
               <HomeButton size="large" variant="dark" onClick={onPlay}>
                 Start a game{" "}
                 <ArrowRight aria-hidden="true" size={24} strokeWidth={3} />

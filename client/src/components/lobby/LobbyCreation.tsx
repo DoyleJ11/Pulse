@@ -168,10 +168,10 @@ function HeroSection({ goHome }: { goHome: () => void }) {
           </div>
         </div>
 
-        <div className="grid grid-cols-2 gap-6">
+        <div className="grid grid-rows-2 gap-6 md:grid-cols-2">
           {/* Add 0.2s animation delay */}
           <div
-            className="p-8 flex flex-col gap-4 min-h-[400px] relative overflow-hidden transition-[translate] duration-200 ease-[ease] hover:-translate-x-0.5 hover:-translate-y-0.5 transform-none shadow-[6px_6px_0_#0A0A0A] border-2 border-text-primary rounded-3xl"
+            className="p-8 flex flex-col gap-4 min-h-[320px] md:min-h-[400px] relative overflow-hidden transition-[translate] duration-200 ease-[ease] hover:-translate-x-0.5 hover:-translate-y-0.5 transform-none shadow-[6px_6px_0_#0A0A0A] border-2 border-text-primary rounded-3xl"
             style={{ backgroundColor: palette.coral }}
           >
             <div className="absolute -top-5 -right-5 w-30 h-30 opacity-60">
