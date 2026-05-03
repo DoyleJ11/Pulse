@@ -99,27 +99,27 @@ function HeroSection({ goHome }: { goHome: () => void }) {
   };
 
   return (
-    <section className="pt-5 px-10 pb-20 relative">
+    <section className="pt-5 px-5 md:px-10 pb-20 relative">
       <div className="absolute inset-0 pointer-events-none overflow-hidden z-0">
         <FloatingShape
           type="circle"
           color={palette.coral}
-          className="top-[12%] left-[6%] h-22 w-22"
+          className="-right-6 top-2 h-14 w-14 md:right-auto md:-top-auto md:left-[6%] md:top-[12%] md:h-22 md:w-22"
         />
         <FloatingShape
           type="diamond"
           color={palette.teal}
-          className="top-[22%] right-[8%] h-15 w-15"
+          className="hidden md:block md:top-[22%] md:right-[8%] md:h-15 md:w-15"
         />
         <FloatingShape
           type="circle"
           color={palette.lavender}
-          className="top-[78%] right-[12%] h-12.5 w-12.5"
+          className="hidden md:block md:top-[78%] md:right-[12%] md:h-12.5 md:w-12.5"
         />
         <FloatingShape
           type="star"
           color={palette.golden}
-          className="top-[70%] left-[8%] h-17.5 w-17.5"
+          className="-left-4 bottom-32 h-12 w-12 md:left-[8%] md:top-[70%] md:h-17.5 md:w-17.5 md:bottom-auto"
         />
       </div>
 
@@ -130,15 +130,15 @@ function HeroSection({ goHome }: { goHome: () => void }) {
             <ArrowLeft aria-hidden="true" size={16} strokeWidth={3} />
             Back
           </HomeButton>
-          <div className="flex items-end justify-between gap-6 flex-wrap mt-6">
+          <div className="flex flex-col items-start gap-4 mt-6 md:flex-row md:items-end md:justify-between md:gap-6">
             <div>
-              <h1 className="text-[clamp(64px,9vw,112px)] m-0 font-black tracking-tight leading-[0.92]">
+              <h1 className="text-[clamp(56px,11vw,112px)] m-0 font-black tracking-tight leading-[0.92]">
                 <span>Grab a</span>
                 <br></br>
                 <span>room.</span>
               </h1>
             </div>
-            <p className="text-lg leading-[1.5] text-text-primary/60 m-0 max-w-[360px]">
+            <p className="text-lg leading-[1.5] text-text-primary/70 m-0 max-w-[360px]">
               <span>
                 Start a fresh lobby and share the code with two friends — or
                 drop in with a code someone already sent you.
@@ -168,10 +168,10 @@ function HeroSection({ goHome }: { goHome: () => void }) {
           </div>
         </div>
 
-        <div className="grid grid-rows-2 gap-6 md:grid-cols-2">
+        <div className="flex flex-col gap-6 md:flex-row">
           {/* Add 0.2s animation delay */}
           <div
-            className="p-8 flex flex-col gap-4 min-h-[320px] md:min-h-[400px] relative overflow-hidden transition-[translate] duration-200 ease-[ease] hover:-translate-x-0.5 hover:-translate-y-0.5 transform-none shadow-[6px_6px_0_#0A0A0A] border-2 border-text-primary rounded-3xl"
+            className="p-6 md:p-8 flex flex-col gap-4 min-h-[320px] md:min-h-[400px] relative overflow-hidden transition-[translate] duration-200 ease-[ease] hover:-translate-x-0.5 hover:-translate-y-0.5 transform-none shadow-[6px_6px_0_#0A0A0A] border-2 border-text-primary rounded-3xl md:flex-1 "
             style={{ backgroundColor: palette.coral }}
           >
             <div className="absolute -top-5 -right-5 w-30 h-30 opacity-60">
@@ -187,12 +187,12 @@ function HeroSection({ goHome }: { goHome: () => void }) {
                 <span className="text-sm font-bold font-mono">Option A</span>
                 <span className="w-3.5 h-3.5 rounded-full bg-text-primary"></span>
               </div>
-              <h2 className="text-[64px] mx-0 mt-0 mb-3 font-black tracking-tight leading-[0.92] uppercase">
+              <h2 className="text-5xl md:text-[64px] mx-0 mt-0 mb-3 font-black tracking-tight leading-[0.92] uppercase">
                 <span>CREATE</span>
                 <br></br>
                 <span>LOBBY</span>
               </h2>
-              <p className="leading-[1.5] font-medium text-text-primary mx-0 mt-0 mb-6">
+              <p className="text-lg leading-[1.5] font-medium text-text-primary mx-0 mt-0 mb-6 md:text-base">
                 <span>
                   Spin up a fresh room. You'll get a 6-letter code to share with
                   your crew.
@@ -217,7 +217,7 @@ function HeroSection({ goHome }: { goHome: () => void }) {
           </div>
 
           <div
-            className="p-8 flex flex-col gap-4 min-h-[400px] relative overflow-hidden transition-[translate] duration-200 ease-[ease] hover:-translate-x-0.5 hover:-translate-y-0.5 transform-none shadow-[6px_6px_0_#0A0A0A] border-2 border-text-primary rounded-3xl"
+            className="p-6 md:p-8 flex flex-col gap-4 min-h-[320px] md:min-h-[400px] relative overflow-hidden transition-[translate] duration-200 ease-[ease] hover:-translate-x-0.5 hover:-translate-y-0.5 transform-none shadow-[6px_6px_0_#0A0A0A] border-2 border-text-primary rounded-3xl md:flex-1"
             style={{ backgroundColor: palette.teal }}
           >
             <div className="absolute -bottom-5 -left-5 w-28 h-28 opacity-60">
@@ -232,7 +232,7 @@ function HeroSection({ goHome }: { goHome: () => void }) {
                 <span className="text-sm font-bold font-mono">Option B</span>
                 <span className="w-3.5 h-3.5 rounded-full bg-text-primary"></span>
               </div>
-              <h2 className="text-[64px] mx-0 mt-0 mb-3 font-black tracking-tight leading-[0.92] uppercase">
+              <h2 className="text-5xl md:text-[64px] mx-0 mt-0 mb-3 font-black tracking-tight leading-[0.92] uppercase">
                 <span>JOIN</span>
                 <br></br>
                 <span>LOBBY</span>

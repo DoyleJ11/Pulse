@@ -39,9 +39,11 @@ function HomePage() {
     <main className="min-h-screen overflow-x-hidden bg-bg-cream text-text-primary">
       <Nav
         rightSlot={
-          <div className="hidden flex-wrap items-center justify-end gap-1.5 md:flex">
-            <HomeButton onClick={goHome}>Home</HomeButton>
-            <HomeButton onClick={scrollToHow}>How it works</HomeButton>
+          <div className="flex flex-wrap items-center justify-end gap-1.5">
+            <span className="hidden md:contents">
+              <HomeButton onClick={goHome}>Home</HomeButton>
+              <HomeButton onClick={scrollToHow}>How it works</HomeButton>
+            </span>
             <HomeButton variant="dark" onClick={goPlay}>
               Play now{" "}
               <ArrowRight aria-hidden="true" size={18} strokeWidth={3} />
@@ -71,17 +73,17 @@ function HeroSection({
         <FloatingShape
           type="circle"
           color={homePalette.coral}
-          className="left-[4%] top-[18%] h-24 w-24 lg:left-[6%] lg:top-[20%] lg:h-[90px] lg:w-[90px]"
+          className="-right-6 top-2 h-16 w-16 md:-right-auto md:left-[4%] md:top-[18%] md:h-24 md:w-24 lg:left-[6%] lg:top-[20%] lg:h-[90px] lg:w-[90px]"
         />
         <FloatingShape
           type="star"
           color={homePalette.golden}
-          className="bottom-[13%] left-[8%] h-[70px] w-[70px]"
+          className="-left-4 bottom-4 h-12 w-12 md:left-[8%] md:bottom-[13%] md:h-[70px] md:w-[70px]"
         />
         <FloatingShape
           type="circle"
           color={homePalette.lavender}
-          className="bottom-[16%] right-[12%] h-[50px] w-[50px]"
+          className="hidden md:block md:bottom-[16%] md:right-[12%] md:h-[50px] md:w-[50px]"
         />
       </div>
 
@@ -104,7 +106,7 @@ function HeroSection({
               </span>
             </h1>
 
-            <p className="text-xl leading-[1.45] font-medium text-text-secondary/80 max-w-[520px] mb-8">
+            <p className="text-xl leading-[1.45] font-medium text-text-primary/80 max-w-[520px] mb-8">
               A 3-player music bracket game. Two friends pick songs, one friend
               judges. Loud arguments guaranteed.
             </p>
@@ -143,7 +145,9 @@ function HeroSection({
             </div>
           </div>
 
-          <LiveBracketCard />
+          <div className="hidden md:block">
+            <LiveBracketCard />
+          </div>
         </div>
       </div>
     </section>

@@ -6,12 +6,14 @@ export function HomeButton({
   size = "medium",
   variant = "light",
   disabled = false,
+  className = "",
 }: {
   children: ReactNode;
   onClick: () => void;
   size?: "medium" | "large";
   variant?: "light" | "dark";
   disabled?: boolean;
+  className?: string;
 }) {
   return (
     <button
@@ -25,7 +27,7 @@ export function HomeButton({
         disabled
           ? "opacity-50 bg-ink/40 cursor-not-allowed"
           : "opacity-100 cursor-pointer"
-      }`}
+      } ${className}`}
       onClick={onClick}
       type="button"
       disabled={disabled}
