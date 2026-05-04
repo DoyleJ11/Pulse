@@ -102,23 +102,21 @@ function RoleDropdown({
         <div className="absolute top-[calc(100%+6px)] right-0 bg-white border-ink rounded-[14px] shadow-small z-50 min-w-[140px] overflow-hidden">
           {ROLE_OPTIONS.filter(
             (option) =>
-              option.role !== currentRole &&
-              !takenPlayerSlots.has(option.role),
+              option.role !== currentRole && !takenPlayerSlots.has(option.role),
           ).map((option, i) => (
-              <button
-                key={option.role}
-                className={`flex items-center gap-2.5 w-full py-2.5 px-3.5 bg-white font-black text-sm tracking-wide text-left cursor-pointer text-ink ${i !== 0 ? "border-t-[1.5px] border-t-ink/10" : ""}`}
-                onClick={() => handleSelect(option.role)}
-                role="option"
-              >
-                <span
-                  className="w-3 h-3 rounded-full border-[1.5px] border-text-primary"
-                  style={{ backgroundColor: roleColor(option.role) }}
-                />
-                {option.label}
-              </button>
-            ),
-          )}
+            <button
+              key={option.role}
+              className={`flex items-center gap-2.5 w-full py-2.5 px-3.5 bg-white font-black text-sm tracking-wide text-left cursor-pointer text-ink ${i !== 0 ? "border-t-[1.5px] border-t-ink/10" : ""}`}
+              onClick={() => handleSelect(option.role)}
+              role="option"
+            >
+              <span
+                className="w-3 h-3 rounded-full border-[1.5px] border-text-primary"
+                style={{ backgroundColor: roleColor(option.role) }}
+              />
+              {option.label}
+            </button>
+          ))}
         </div>
       )}
     </div>
@@ -233,13 +231,13 @@ export function Lobby() {
     <>
       <Nav
         rightSlot={
-          <div className="flex items-center gap-2.5">
+          <div className="flex flex-col items-center gap-2 md:gap-2.5 md:flex-row">
             <button
               className={`inline-flex items-center gap-2.5 text-text-primary border-2 border-text-primary rounded-[14px] py-2 pr-3 pl-3.5 font-mono font-bold text-lg tracking-[0.18em] cursor-pointer shadow-[${smallShadow}]`}
               style={{ backgroundColor: palette.golden }}
               onClick={handleCopyCode}
             >
-              <span className="text-xs tracking-[0.15em] font-black opacity-60 uppercase">
+              <span className="hidden sm:inline text-xs tracking-[0.15em] font-black opacity-60 uppercase">
                 <span>Code</span>
               </span>
               {lobbyCode}
@@ -252,45 +250,41 @@ export function Lobby() {
               </span>
             </button>
             <button
-              className={`inline-flex items-center justify-center w-10 h-10 p-0 bg-white border-2 border-text-primary rounded-xl cursor-pointer shadow-[${smallShadow}]`}
+              className={`hidden md:inline-flex items-center justify-center w-10 h-10 p-0 bg-white border-2 border-text-primary rounded-xl cursor-pointer shadow-[${smallShadow}]`}
               onClick={handleSettingsClick}
               aria-label="Room settings"
             >
               <Settings aria-hidden="true" size={24} strokeWidth={2} />
             </button>
 
-            <HomeButton
-              size="medium"
-              variant="light"
-              onClick={handleLeaveRoom}
-            >
-              <span className="uppercase text-sm">LEAVE</span>
+            <HomeButton size="medium" variant="light" onClick={handleLeaveRoom}>
+              <span className="uppercase text-base">LEAVE</span>
             </HomeButton>
           </div>
         }
       />
 
-      <section className="pt-5 pb-20 px-10 relative min-h-[calc(-92px+100vh)]">
+      <section className="pt-5 pb-20 px-5 md:px-10 relative min-h-[calc(-92px+100vh)]">
         <div className="absolute inset-0 pointer-events-none overflow-hidden z-0">
           <FloatingShape
             type="star"
             color={palette.pink}
-            className="top-[15%] left-[4%] h-22.5 w-22.5"
+            className="-left-4 top-2 h-14 w-14 md:left-[4%] md:top-[15%] md:h-22.5 md:w-22.5"
           />
           <FloatingShape
             type="circle"
             color={palette.teal}
-            className="top-[20%] right-[6%] h-20 w-20"
+            className="-right-6 top-6 h-14 w-14 md:right-[6%] md:top-[20%] md:h-20 md:w-20"
           />
           <FloatingShape
             type="diamond"
             color={palette.golden}
-            className="top-[60%] left-[6%] h-17.5 w-17.5"
+            className="hidden md:block md:top-[60%] md:left-[6%] md:h-17.5 md:w-17.5"
           />
           <FloatingShape
             type="star"
             color={palette.coral}
-            className="top-[75%] right-[10%] h-12.5 w-12.5"
+            className="hidden md:block md:top-[75%] md:right-[10%] md:h-12.5 md:w-12.5"
           />
         </div>
         <div className="relative z-2 max-w-[1080px] my-0 mx-auto">
@@ -301,7 +295,7 @@ export function Lobby() {
                 <span>Invite your friends</span>
               </Pill>
 
-              <h1 className="display text-[clamp(72px,10vw,128px)] m-0">
+              <h1 className="display text-[clamp(64px,11vw,128px)] m-0">
                 <span>Who's</span>
                 <br></br>
                 <span>here.</span>
@@ -326,7 +320,7 @@ export function Lobby() {
               </span>
               <span className="text-sm font-extrabold tracking-[0.01em]">
                 {isReady ? "Ready to go!" : "Waiting on…"}
-                <span className="font-semibold text-ink/60 ml-2">
+                <span className="block sm:inline font-semibold text-ink/60 sm:ml-2">
                   {isReady
                     ? "The host may start the lobby."
                     : `Need ${waitingMessage}.`}
@@ -372,7 +366,7 @@ export function Lobby() {
                 {spectatorNames}
               </span>
               {iAmSpectator && (
-                <div className="ml-auto">
+                <div className="w-full mt-2 sm:w-auto sm:ml-auto sm:mt-0">
                   <RoleDropdown
                     currentRole="spectator"
                     takenPlayerSlots={takenPlayerSlots}
@@ -383,12 +377,13 @@ export function Lobby() {
           )}
 
           {userId === hostId && (
-            <div className="flex justify-end">
+            <div className="flex justify-stretch sm:justify-end">
               <HomeButton
                 size="large"
                 variant="dark"
                 onClick={handleStartPicking}
                 disabled={!isReady}
+                className="w-full sm:w-auto"
               >
                 <span>Start Game</span>
                 <ArrowRight aria-hidden="true" size={18} strokeWidth={3} />
