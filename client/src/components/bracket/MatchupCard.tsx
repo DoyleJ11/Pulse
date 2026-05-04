@@ -68,9 +68,14 @@ export function MatchupCard({
             ? "shadow-[3px_3px_0px_0px_#0A0A0A]"
             : "shadow-[2px_2px_0px_0px_rgba(0,0,0,0.3)]"
         }`}
-        style={{ backgroundColor: isWinner ? getPlayerColor() : "#fff" }}
       >
-        <div className="flex h-full">
+        {isWinner && (
+          <div
+            className="absolute inset-0 origin-left winner-fill"
+            style={{ backgroundColor: getPlayerColor() }}
+          />
+        )}
+        <div className="relative z-10 flex h-full">
           {/* A/B player strip */}
           <div
             className="w-[36px] shrink-0 border-r-[3px] border-black flex items-center justify-center"

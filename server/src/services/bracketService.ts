@@ -259,7 +259,7 @@ async function updateBracket(
       where: { roomId: room.id },
       data: {
         state: updatedBracket as Prisma.InputJsonValue,
-        currentMatchup: nextMatchup ?? room.bracket!.currentMatchup,
+        currentMatchup: nextMatchup,
       },
     });
   });
