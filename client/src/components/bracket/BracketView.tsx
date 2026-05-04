@@ -5,7 +5,7 @@ import { socket } from "../../utils/socket";
 import { useAudioStore } from "../../stores/audioStore";
 import { Matchup } from "./Matchup";
 import { CARD_H, CARD_W, MATCHUP_H } from "./bracketLayout";
-import { Crown } from "lucide-react";
+import { Crown, Crosshair } from "lucide-react";
 import { Nav } from "../ui/Nav";
 import { BracketProgress } from "./BracketProgress";
 import { BracketHeader } from "./BracketHeader";
@@ -207,11 +207,16 @@ export function BracketView() {
   // After this point, downstream code can assume players + bracket exist.
   const isReady = bracketSlots.length > 0 && !!playerA && !!playerB && !!judge;
 
-  const { scrollContainerRef, championRef, registerMatchupRef } =
-    useBracketCamera({
-      currentMatchup: bracket.currentMatchup,
-      isReady,
-    });
+  const {
+    scrollContainerRef,
+    championRef,
+    registerMatchupRef,
+    recenter,
+    showRecenter,
+  } = useBracketCamera({
+    currentMatchup: bracket.currentMatchup,
+    isReady,
+  });
 
   if (!isReady) {
     return (
@@ -415,14 +420,26 @@ export function BracketView() {
           </div>
         </div>
       </div>
-      {champion ? (
-        <ViewChampionBtn />
-      ) : (
-        hasDisconnected && (
-          <PermissionGuard allowedRoles={["player_a", "player_b", "judge"]}>
-            <EndGameBtn />
-          </PermissionGuard>
-        )
+      {!champion && hasDisconnected && (
+        <PermissionGuard allowedRoles={["player_a", "player_b", "judge"]}>
+          <EndGameBtn />
+        </PermissionGuard>
+      )}
+      {(champion || showRecenter) && (
+        <div className="fixed bottom-5 right-5 z-50 flex items-center gap-3">
+          {champion && <ViewChampionBtn />}
+
+          {showRecenter && (
+            <button
+              type="button"
+              onClick={recenter}
+              aria-label="Recenter on current matchup"
+              className="flex h-12 w-12 items-center justify-center rounded-full border-2 border-black bg-[#FFD952] text-black shadow-[4px_4px_0_#0A0A0A]"
+            >
+              <Crosshair className="h-5 w-5" />
+            </button>
+          )}
+        </div>
       )}
     </div>
   );
