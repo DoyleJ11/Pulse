@@ -434,7 +434,7 @@ export function BracketView() {
               type="button"
               onClick={recenter}
               aria-label="Recenter on current matchup"
-              className="flex h-12 w-12 items-center justify-center rounded-full border-2 border-black bg-[#FFD952] text-black shadow-[4px_4px_0_#0A0A0A]"
+              className="flex h-12 w-12 items-center justify-center rounded-full border-2 border-black bg-[#FFD952] text-black shadow-[4px_4px_0_#0A0A0A] cursor-pointer"
             >
               <Crosshair className="h-5 w-5" />
             </button>
