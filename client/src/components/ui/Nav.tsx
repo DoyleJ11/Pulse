@@ -5,7 +5,7 @@ import { Waveform } from "./Waveform";
 export function Nav({ rightSlot }: { rightSlot?: ReactNode }) {
   const navigate = useNavigate();
   return (
-    <div className="flex justify-between items-center relative z-10 px-10 py-6">
+    <div className="flex justify-between items-center relative z-10 px-5 md:px-10 py-6">
       <button
         onClick={() => navigate("/")}
         className="text-[28px] font-black tracking-tighter flex items-end cursor-pointer gap-2.5 bg-transparent border-0 p-0 leading-none"

@@ -39,9 +39,11 @@ function HomePage() {
     <main className="min-h-screen overflow-x-hidden bg-bg-cream text-text-primary">
       <Nav
         rightSlot={
-          <div className="hidden flex-wrap items-center justify-end gap-1.5 md:flex">
-            <HomeButton onClick={goHome}>Home</HomeButton>
-            <HomeButton onClick={scrollToHow}>How it works</HomeButton>
+          <div className="flex flex-wrap items-center justify-end gap-1.5">
+            <span className="hidden md:contents">
+              <HomeButton onClick={goHome}>Home</HomeButton>
+              <HomeButton onClick={scrollToHow}>How it works</HomeButton>
+            </span>
             <HomeButton variant="dark" onClick={goPlay}>
               Play now{" "}
               <ArrowRight aria-hidden="true" size={18} strokeWidth={3} />
@@ -66,50 +68,50 @@ function HeroSection({
   onHowItWorks: () => void;
 }) {
   return (
-    <section className="relative px-10 pt-10 pb-20 overflow-hidden">
+    <section className="relative px-5 md:px-10 pt-10 pb-20 overflow-hidden">
       <div className="absolute inset-0 pointer-events-none overflow-hidden z-0">
         <FloatingShape
           type="circle"
           color={homePalette.coral}
-          className="left-[4%] top-[18%] h-24 w-24 lg:left-[6%] lg:top-[20%] lg:h-[90px] lg:w-[90px]"
+          className="-right-6 top-2 h-16 w-16 md:-right-auto md:left-[4%] md:top-[18%] md:h-24 md:w-24 lg:left-[6%] lg:top-[20%] lg:h-[90px] lg:w-[90px]"
         />
         <FloatingShape
           type="star"
           color={homePalette.golden}
-          className="bottom-[13%] left-[8%] h-[70px] w-[70px]"
+          className="-left-4 bottom-4 h-12 w-12 md:left-[8%] md:bottom-[13%] md:h-[70px] md:w-[70px]"
         />
         <FloatingShape
           type="circle"
           color={homePalette.lavender}
-          className="bottom-[16%] right-[12%] h-[50px] w-[50px]"
+          className="hidden md:block md:bottom-[16%] md:right-[12%] md:h-[50px] md:w-[50px]"
         />
       </div>
 
       <div className="relative z-2 max-w-[1280px] my-0 mx-auto">
-        <div className="grid gap-12 grid-cols-[1.25fr_1fr] items-center">
+        <div className="flex flex-col gap-10 md:grid md:grid-cols-[1.25fr_1fr] md:gap-12 md:items-center">
           <div>
-            <div className="flex gap-2 mb-6">
+            <div className="flex gap-2 mb-6 flex-wrap">
               <Pill color={homePalette.lavender}>● 3-player party game</Pill>
               <Pill color={homePalette.golden}>No install</Pill>
             </div>
 
-            <h1 className="text-[clamp(72px,10vw,148px)] mx-0 mt-0 mb-5 font-black uppercase leading-[0.92] tracking-tight">
+            <h1 className="text-[clamp(56px,12vw,148px)] mx-0 mt-0 mb-5 font-black uppercase leading-[0.92] tracking-tight">
               <span>Whose</span>
               <br />
               <span className="inline-flex items-center gap-4.5">
                 Taste{" "}
-                <span className="inline-block bg-section-coral border-3 border-black rounded-3xl px-5.5 py-1.5 -rotate-3 text-[0.7em] shadow-[6px_6px_0_#0A0A0A]">
+                <span className="inline-block bg-section-coral border-3 border-black rounded-3xl px-5.5 py-1.5 -rotate-3 text-[0.6em] shadow-[6px_6px_0_#0A0A0A]">
                   Wins?
                 </span>
               </span>
             </h1>
 
-            <p className="text-xl leading-[1.45] font-medium text-text-secondary/80 max-w-[520px] mb-8">
+            <p className="text-xl leading-[1.45] font-medium text-text-primary/80 max-w-[520px] mb-8">
               A 3-player music bracket game. Two friends pick songs, one friend
               judges. Loud arguments guaranteed.
             </p>
 
-            <div className="flex flex-wrap gap-3.5">
+            <div className="flex flex-wrap gap-3.5 w-full sm:w-auto">
               <HomeButton size="large" variant="dark" onClick={onPlay}>
                 Start a game{" "}
                 <ArrowRight aria-hidden="true" size={24} strokeWidth={3} />
@@ -143,7 +145,9 @@ function HeroSection({
             </div>
           </div>
 
-          <LiveBracketCard />
+          <div className="hidden md:block">
+            <LiveBracketCard />
+          </div>
         </div>
       </div>
     </section>
