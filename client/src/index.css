@@ -203,6 +203,15 @@
   }
 }
 
+@keyframes winner-fill {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+
 @layer utilities {
   .no-scrollbar::-webkit-scrollbar {
     display: none;
@@ -227,6 +236,10 @@
 
   .wait-ring {
     animation: wait-ring 1.6s ease-out 0s infinite normal none running;
+  }
+
+  .winner-fill {
+    animation: winner-fill 300ms ease-out forwards;
   }
 }
 
