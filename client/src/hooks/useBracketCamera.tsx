@@ -84,7 +84,10 @@ export function useBracketCamera({
     const horizontalDiff = Math.abs(scroller.scrollLeft - targetPosition.left);
     const verticalDiff = Math.abs(window.scrollY - targetPosition.top);
 
-    return horizontalDiff < 80 && verticalDiff < 120;
+    return (
+      horizontalDiff < HORIZONTAL_CENTER_TOLERANCE &&
+      verticalDiff < VERTICAL_CENTER_TOLERANCE
+    );
   }
 
   useEffect(() => {
