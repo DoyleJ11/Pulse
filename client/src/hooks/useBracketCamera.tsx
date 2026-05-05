@@ -11,24 +11,25 @@ interface BracketCameraProps {
   isReady: boolean;
 }
 
+const CAMERA_PAN_DELAY_MS = 1200;
+const CAMERA_SETTLE_DELAY_MS = 900;
+const HORIZONTAL_CENTER_TOLERANCE = 240;
+const VERTICAL_CENTER_TOLERANCE = 360;
+
+function clamp(value: number, min: number, max: number) {
+  return Math.min(Math.max(value, min), max);
+}
+
 export function useBracketCamera({
   currentMatchup,
   isReady,
 }: BracketCameraProps) {
-  const CAMERA_PAN_DELAY_MS = 1200;
-  const CAMERA_SETTLE_DELAY_MS = 900;
-  const HORIZONTAL_CENTER_TOLERANCE = 240;
-  const VERTICAL_CENTER_TOLERANCE = 360;
   const scrollContainerRef = useRef<HTMLDivElement | null>(null);
   const championRef = useRef<HTMLDivElement | null>(null);
   const matchupRefs = useRef(new Map<number, HTMLDivElement>());
   const cameraMoveTimeoutRef = useRef<number | null>(null);
   const isProgrammaticMoveRef = useRef(false);
   const [showRecenter, setShowRecenter] = useState(false);
-
-  function clamp(value: number, min: number, max: number) {
-    return Math.min(Math.max(value, min), max);
-  }
 
   const registerMatchupRef = useCallback((parentIndex: number) => {
     return (node: HTMLDivElement | null) => {
@@ -40,15 +41,15 @@ export function useBracketCamera({
     };
   }, []);
 
-  function getCameraTarget(): HTMLDivElement | null {
+  const getCameraTarget = useCallback((): HTMLDivElement | null => {
     if (currentMatchup === null) {
       return championRef.current;
     }
 
     return matchupRefs.current.get(currentMatchup) ?? null;
-  }
+  }, [currentMatchup]);
 
-  function getTargetScrollPosition() {
+  const getTargetScrollPosition = useCallback(() => {
     const scroller = scrollContainerRef.current;
     const target = getCameraTarget();
 
@@ -74,9 +75,9 @@ export function useBracketCamera({
       left: clamp(left, 0, Math.max(0, maxLeft)),
       top: clamp(top, 0, Math.max(0, maxTop)),
     };
-  }
+  }, [getCameraTarget]);
 
-  function isCameraCentered() {
+  const isCameraCentered = useCallback(() => {
     const scroller = scrollContainerRef.current;
     const targetPosition = getTargetScrollPosition();
     if (!scroller || !targetPosition) return true;
@@ -88,7 +89,7 @@ export function useBracketCamera({
       horizontalDiff < HORIZONTAL_CENTER_TOLERANCE &&
       verticalDiff < VERTICAL_CENTER_TOLERANCE
     );
-  }
+  }, [getTargetScrollPosition]);
 
   useEffect(() => {
     if (!isReady) return;
@@ -126,17 +127,16 @@ export function useBracketCamera({
         window.cancelAnimationFrame(frameId);
       }
     };
-  }, [isReady, currentMatchup]);
+  }, [isReady, currentMatchup, isCameraCentered]);
 
   const moveToCurrentTarget = useCallback(
     (behavior: ScrollBehavior = "smooth") => {
       const scroller = scrollContainerRef.current;
-      const target = getCameraTarget();
       const targetPosition = getTargetScrollPosition();
-      if (!scroller || !target) return;
+      if (!scroller || !targetPosition) return;
 
-      scroller.scrollTo({ left: targetPosition?.left, behavior });
-      window.scrollTo({ top: targetPosition?.top, behavior });
+      scroller.scrollTo({ left: targetPosition.left, behavior });
+      window.scrollTo({ top: targetPosition.top, behavior });
 
       isProgrammaticMoveRef.current = true;
       setShowRecenter(false);
@@ -150,8 +150,13 @@ export function useBracketCamera({
         setShowRecenter(!isCameraCentered());
       }, CAMERA_SETTLE_DELAY_MS);
     },
-    [currentMatchup],
+    [getTargetScrollPosition, isCameraCentered],
   );
+
+  const recenter = useCallback(() => {
+    moveToCurrentTarget("smooth");
+    setShowRecenter(false);
+  }, [moveToCurrentTarget]);
 
   useEffect(() => {
     return () => {
@@ -175,10 +180,7 @@ export function useBracketCamera({
     scrollContainerRef,
     championRef,
     registerMatchupRef,
-    recenter: () => {
-      moveToCurrentTarget("smooth");
-      setShowRecenter(false);
-    },
+    recenter,
     showRecenter,
   };
 }

@@ -13,7 +13,7 @@ export function EndGameBtn() {
     <>
       {showModal && (
         <div
-          className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center"
+          className="fixed inset-0 bg-black/50 z-[60] flex items-center justify-center"
           onClick={() => setShowModal(false)}
         >
           <div
@@ -43,14 +43,12 @@ export function EndGameBtn() {
           </div>
         </div>
       )}
-      <div className="fixed bottom-5 right-5 z-40">
-        <button
-          onClick={() => setShowModal(true)}
-          className="bg-[#FFD952] text-black border-2 border-black px-4 py-2 uppercase font-black cursor-pointer rounded-2xl shadow-[4px_4px_0_#0A0A0A] transition-[transform,box-shadow,background-color] duration-[120ms] ease-in-out hover:translate-x-[-1px] hover:translate-y-[-1px] hover:shadow-[5px_5px_0_#0A0A0A] active:translate-x-[3px] active:translate-y-[3px] active:shadow-[1px_1px_0_#0A0A0A]"
-        >
-          END GAME
-        </button>
-      </div>
+      <button
+        onClick={() => setShowModal(true)}
+        className="bg-[#FFD952] text-black border-2 border-black px-4 py-2 uppercase font-black cursor-pointer rounded-2xl shadow-[4px_4px_0_#0A0A0A] transition-[transform,box-shadow,background-color] duration-[120ms] ease-in-out hover:translate-x-[-1px] hover:translate-y-[-1px] hover:shadow-[5px_5px_0_#0A0A0A] active:translate-x-[3px] active:translate-y-[3px] active:shadow-[1px_1px_0_#0A0A0A]"
+      >
+        END GAME
+      </button>
     </>
   );
 }

@@ -420,14 +420,15 @@ export function BracketView() {
           </div>
         </div>
       </div>
-      {!champion && hasDisconnected && (
-        <PermissionGuard allowedRoles={["player_a", "player_b", "judge"]}>
-          <EndGameBtn />
-        </PermissionGuard>
-      )}
-      {(champion || showRecenter) && (
+      {(champion || showRecenter || (!champion && hasDisconnected)) && (
         <div className="fixed bottom-5 right-5 z-50 flex items-center gap-3">
           {champion && <ViewChampionBtn />}
+
+          {!champion && hasDisconnected && (
+            <PermissionGuard allowedRoles={["player_a", "player_b", "judge"]}>
+              <EndGameBtn />
+            </PermissionGuard>
+          )}
 
           {showRecenter && (
             <button
