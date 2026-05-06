@@ -1,6 +1,6 @@
 import { Nav } from "../ui/Nav";
 import { HomeButton } from "../home/HomeButton";
-import { Check, Copy, Settings, ArrowRight, ChevronDown } from "lucide-react";
+import { Check, Copy, ArrowRight, ChevronDown } from "lucide-react";
 import { Pill } from "../home/Pill";
 import { useEffect, useRef, useState } from "react";
 import { useAuthStore } from "../../stores/authStore";
@@ -9,7 +9,7 @@ import { socket } from "../../utils/socket";
 import { startPicking } from "../../services/api";
 import { useNavigate } from "react-router";
 import { useTokenStore } from "../../stores/tokenStore";
-import { type Role, type Status } from "../../types/sharedTypes";
+import { type Mode, type Role, type Status } from "../../types/sharedTypes";
 import { useToastStore } from "../../stores/toastStore";
 import { FloatingShape } from "../home/DecorativeShape";
 import { leaveCurrentRoom } from "../../utils/leaveRoom";
@@ -51,6 +51,56 @@ function roleColor(role: string) {
 function roleLabel(role: string) {
   return (
     ROLE_OPTIONS.find((option) => option.role === role)?.label ?? "Player A"
+  );
+}
+
+function ModeToggle({
+  currentMode,
+  isHost,
+}: {
+  currentMode: Mode;
+  isHost: boolean;
+}) {
+  const handleSelect = (newMode: Mode) => {
+    if (!isHost || newMode === currentMode) return;
+    socket.emit("changeMode", { mode: newMode });
+  };
+
+  const modes: { value: Mode; label: string }[] = [
+    { value: "favorites", label: "Favorites" },
+    { value: "theme", label: "Theme" },
+  ];
+
+  return (
+    <div
+      className={`inline-flex items-center bg-white border-2 border-text-primary rounded-[14px] overflow-hidden shadow-[${smallShadow}]`}
+      role="group"
+      aria-label="Game mode"
+    >
+      {modes.map((m, i) => {
+        const isActive = m.value === currentMode;
+        return (
+          <button
+            key={m.value}
+            type="button"
+            className={`px-3 py-1.5 text-xs font-black tracking-wider uppercase transition-colors ${
+              i > 0 ? "border-l-2 border-text-primary" : ""
+            } ${
+              isActive
+                ? "bg-text-primary text-white"
+                : "bg-white text-text-primary"
+            } ${
+              isHost && !isActive ? "cursor-pointer hover:bg-bg-cream" : ""
+            } ${!isHost ? "cursor-default" : ""}`}
+            onClick={() => handleSelect(m.value)}
+            disabled={!isHost}
+            aria-pressed={isActive}
+          >
+            {m.label}
+          </button>
+        );
+      })}
+    </div>
   );
 }
 
@@ -129,14 +179,26 @@ export function Lobby() {
   const userId = useAuthStore((state) => state.userId);
   const playerList = useRoomStore((state) => state.players);
   const hostId = useRoomStore((state) => state.hostId);
+  const mode = useRoomStore((state) => state.mode);
   const setStatus = useRoomStore((state) => state.setStatus);
+  const setMode = useRoomStore((state) => state.setMode);
+  const setThemeWord = useRoomStore((state) => state.setThemeWord);
   const lobbyCode = useRoomStore((state) => state.code);
-  const addToast = useToastStore((state) => state.addToast);
   const addError = useToastStore((state) => state.addError);
 
   useEffect(() => {
-    const onStartPicking = ({ status }: { status: Status }) => {
+    const onStartPicking = ({
+      status,
+      mode,
+      themeWord,
+    }: {
+      status: Status;
+      mode: Mode;
+      themeWord: string | null;
+    }) => {
       setStatus(status);
+      setMode(mode);
+      setThemeWord(themeWord);
       navigate(`/lobby/${lobbyCode}/picking`);
     };
 
@@ -145,7 +207,7 @@ export function Lobby() {
     return () => {
       socket.off("startPicking", onStartPicking);
     };
-  }, [lobbyCode, navigate, setStatus]);
+  }, [lobbyCode, navigate, setStatus, setMode, setThemeWord]);
 
   const handleStartPicking = async () => {
     try {
@@ -178,10 +240,6 @@ export function Lobby() {
   const handleLeaveRoom = () => {
     leaveCurrentRoom();
     navigate("/");
-  };
-
-  const handleSettingsClick = () => {
-    addToast("Room settings are coming later.", "info");
   };
 
   const activePlayers = playerList.filter((p) => p.role !== "spectator");
@@ -249,13 +307,7 @@ export function Lobby() {
                 )}
               </span>
             </button>
-            <button
-              className={`hidden md:inline-flex items-center justify-center w-10 h-10 p-0 bg-white border-2 border-text-primary rounded-xl cursor-pointer shadow-[${smallShadow}]`}
-              onClick={handleSettingsClick}
-              aria-label="Room settings"
-            >
-              <Settings aria-hidden="true" size={24} strokeWidth={2} />
-            </button>
+            <ModeToggle currentMode={mode} isHost={userId === hostId} />
 
             <HomeButton size="medium" variant="light" onClick={handleLeaveRoom}>
               <span className="uppercase text-base">LEAVE</span>

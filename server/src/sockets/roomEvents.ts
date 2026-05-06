@@ -37,6 +37,7 @@ const JudgePickSchema = z.object({
 });
 
 const ChangeModeSchema = z.object({ mode: z.enum(["favorites", "theme"]) });
+type Mode = z.infer<typeof ChangeModeSchema>["mode"];
 
 interface SocketSession {
   userId: string;
@@ -255,7 +256,7 @@ function submissionComplete(code: string) {
 function startPicking(
   code: string,
   status: string,
-  mode: string,
+  mode: Mode,
   themeWord: string | null,
 ) {
   try {

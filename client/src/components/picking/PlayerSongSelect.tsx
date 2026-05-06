@@ -9,7 +9,11 @@ import { useEffect, useState, useRef } from "react";
 import { WaitingOverlay } from "./WaitingOverlay";
 import { socket } from "../../utils/socket";
 
-export function PlayerSongSelect() {
+export function PlayerSongSelect({
+  themeWord,
+}: {
+  themeWord: string | null;
+}) {
   const selectedSongs = useSongStore((state) => state.selectedSongs);
   const removeSong = useSongStore((state) => state.removeSong);
   const addSong = useSongStore((state) => state.addSong);
@@ -78,6 +82,13 @@ export function PlayerSongSelect() {
                 {roomCode || "------"}
               </span>
             </p>
+            {themeWord && (
+              <div className="mt-3 inline-flex bg-[#C4B5FD] border-[3px] border-text-primary rounded-full px-5 py-1.5">
+                <span className="text-base font-black text-text-primary">
+                  Theme: <span className="uppercase">{themeWord}</span>
+                </span>
+              </div>
+            )}
           </div>
 
           {/* Song counter pill */}

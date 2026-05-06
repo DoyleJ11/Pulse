@@ -98,7 +98,7 @@ router.post(
     startPicking(
       code,
       updatedRoom.status,
-      updatedRoom.mode,
+      updatedRoom.mode as "favorites" | "theme",
       updatedRoom.themeWord,
     );
     res.json(response);
