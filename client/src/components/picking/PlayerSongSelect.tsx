@@ -8,6 +8,7 @@ import { useToastStore } from "../../stores/toastStore";
 import { useEffect, useState, useRef } from "react";
 import { WaitingOverlay } from "./WaitingOverlay";
 import { socket } from "../../utils/socket";
+import { ThemePill } from "../ui/ThemePill";
 
 export function PlayerSongSelect({
   themeWord,
@@ -83,10 +84,8 @@ export function PlayerSongSelect({
               </span>
             </p>
             {themeWord && (
-              <div className="mt-3 inline-flex bg-[#C4B5FD] border-[3px] border-text-primary rounded-full px-5 py-1.5">
-                <span className="text-base font-black text-text-primary">
-                  Theme: <span className="uppercase">{themeWord}</span>
-                </span>
+              <div className="mt-3">
+                <ThemePill themeWord={themeWord} />
               </div>
             )}
           </div>
