@@ -11,6 +11,7 @@ export function PickingFilterPage() {
     const clearSongs = useSongStore((state) => state.clearSongs);
     const setLockIn = useSongStore((state) => state.setLockIn);
     const lobbyCode = useRoomStore((state) => state.code);
+    const themeWord = useRoomStore((state) => state.themeWord);
     const navigate = useNavigate();
 
     // On submissionComplete - clear songs, set lockIn false, navigate all users to bracket
@@ -29,10 +30,10 @@ export function PickingFilterPage() {
 return (
     <>
         <PermissionGuard allowedRoles={['player_a', 'player_b']}>
-            <PlayerSongSelect />
+            <PlayerSongSelect themeWord={themeWord} />
         </PermissionGuard>
         <PermissionGuard allowedRoles={['judge', 'spectator']}>
-            <JudgeSelectView code={lobbyCode} theme={null}/>
+            <JudgeSelectView code={lobbyCode} theme={themeWord}/>
         </PermissionGuard>
     </>
 )

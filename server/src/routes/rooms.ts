@@ -91,9 +91,16 @@ router.post(
 
     const response = {
       status: updatedRoom.status,
+      mode: updatedRoom.mode,
+      themeWord: updatedRoom.themeWord,
     };
 
-    startPicking(code, updatedRoom.status);
+    startPicking(
+      code,
+      updatedRoom.status,
+      updatedRoom.mode as "favorites" | "theme",
+      updatedRoom.themeWord,
+    );
     res.json(response);
   }),
 );

@@ -2,6 +2,7 @@ import { z } from "zod";
 import {
   type Role,
   type Status,
+  type Mode,
   type SongSelection,
 } from "../types/sharedTypes";
 
@@ -25,6 +26,14 @@ const StatusSchema = z.object({
     "battling",
     "complete",
   ]) satisfies z.ZodType<Status>,
+});
+
+const ModeSchema = z.enum(["favorites", "theme"]) satisfies z.ZodType<Mode>;
+
+const StartPickingResponseSchema = z.object({
+  status: StatusSchema.shape.status,
+  mode: ModeSchema,
+  themeWord: z.string().nullable(),
 });
 
 const API_BASE_URL = import.meta.env.VITE_API_URL?.replace(/\/$/, "") ?? "";
@@ -51,7 +60,7 @@ async function startPicking(code: string, token: string) {
     token,
   );
 
-  return StatusSchema.parse(response);
+  return StartPickingResponseSchema.parse(response);
 }
 
 const DeezerSchema = z.object({
@@ -157,6 +166,8 @@ const RoomStateSchema = z.object({
     role: RoomSchema.shape.role,
   }),
   players: z.array(PlayerSchema),
+  mode: ModeSchema,
+  themeWord: z.string().nullable(),
   bracket: BracketSchema.nullable(),
 });
 

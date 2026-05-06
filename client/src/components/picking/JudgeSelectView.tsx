@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react"
 import { socket } from "../../utils/socket"
 import { PlayerStatusCard } from "./PlayerStatusCard"
+import { ThemePill } from "../ui/ThemePill"
 
 interface Player {
     songCount: number,
@@ -58,13 +59,7 @@ export function JudgeSelectView({code, theme}: JudgeViewProps) {
                             Room: <span className="text-black font-black text-xl">{code}</span>
                         </div>
                         
-                        {theme && (
-                            <div className="bg-[#C4B5FD] border-[3px] border-black rounded-full px-6 py-2">
-                                <div className="text-base font-black text-black">
-                                Theme: <span className="uppercase">{theme}</span>
-                                </div>
-                            </div>
-                        )}
+                        {theme && <ThemePill themeWord={theme} />}
                     </div>
                 </div>
 

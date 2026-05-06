@@ -17,6 +17,7 @@ import { useNavigate } from "react-router";
 import { useToastStore } from "../../stores/toastStore";
 import { useTokenStore } from "../../stores/tokenStore";
 import { PreviewAlbumArt } from "../ui/PreviewAlbumArt";
+import { ThemePill } from "../ui/ThemePill";
 import { useBracketCamera } from "../../hooks/useBracketCamera";
 
 interface Bracket {
@@ -80,6 +81,7 @@ export function BracketView() {
   const navigate = useNavigate();
   const lobbyCode = useRoomStore((state) => state.code);
   const token = useTokenStore((state) => state.token);
+  const themeWord = useRoomStore((state) => state.themeWord);
   const players = useRoomStore((state) => state.players);
   const playerA = players.find((p) => p.role === "player_a");
   const playerB = players.find((p) => p.role === "player_b");
@@ -232,6 +234,11 @@ export function BracketView() {
   return (
     <div className="flex flex-col">
       <Nav rightSlot={<BracketProgress decided={decidedCount} total={15} />} />
+      {themeWord && (
+        <div className="fixed top-20 left-1/2 -translate-x-1/2 z-40 pointer-events-none">
+          <ThemePill themeWord={themeWord} />
+        </div>
+      )}
       <BracketHeader
         matchupSongs={matchupSongs}
         champion={champion}
@@ -420,14 +427,15 @@ export function BracketView() {
           </div>
         </div>
       </div>
-      {!champion && hasDisconnected && (
-        <PermissionGuard allowedRoles={["player_a", "player_b", "judge"]}>
-          <EndGameBtn />
-        </PermissionGuard>
-      )}
-      {(champion || showRecenter) && (
+      {(champion || showRecenter || (!champion && hasDisconnected)) && (
         <div className="fixed bottom-5 right-5 z-50 flex items-center gap-3">
           {champion && <ViewChampionBtn />}
+
+          {!champion && hasDisconnected && (
+            <PermissionGuard allowedRoles={["player_a", "player_b", "judge"]}>
+              <EndGameBtn />
+            </PermissionGuard>
+          )}
 
           {showRecenter && (
             <button

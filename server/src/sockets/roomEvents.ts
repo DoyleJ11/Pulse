@@ -14,7 +14,7 @@ import {
   endGame,
   getBracketState,
 } from "../services/bracketService.js";
-import { changeRole } from "../services/roomService.js";
+import { changeMode, changeRole } from "../services/roomService.js";
 
 const CodeSchema = z
   .string()
@@ -35,6 +35,9 @@ const JudgePickSchema = z.object({
   matchupIndex: z.number().int().min(0).max(14),
   winnerSongId: z.string().min(1),
 });
+
+const ChangeModeSchema = z.object({ mode: z.enum(["favorites", "theme"]) });
+type Mode = z.infer<typeof ChangeModeSchema>["mode"];
 
 interface SocketSession {
   userId: string;
@@ -69,10 +72,12 @@ function registerRoomEvents(io: Server, socket: Socket) {
       socket.join(user.room.code);
       await setPlayerConnected(user.id, true);
 
-      const users = await getAllUsers(user.room.code);
+      const room = await getAllUsers(user.room.code);
       io.to(user.room.code).emit("roomState", {
-        users: users.players,
-        hostId: users.hostId,
+        users: room.players,
+        hostId: room.hostId,
+        mode: room.mode,
+        themeWord: room.themeWord,
       });
     } catch (err) {
       console.error("Failed to join room", err);
@@ -87,10 +92,12 @@ function registerRoomEvents(io: Server, socket: Socket) {
 
       await setPlayerConnected(session.userId, false);
 
-      const users = await getAllUsers(session.code);
+      const room = await getAllUsers(session.code);
       io.to(session.code).emit("roomState", {
-        users: users.players,
-        hostId: users.hostId,
+        users: room.players,
+        hostId: room.hostId,
+        mode: room.mode,
+        themeWord: room.themeWord,
       });
     } catch (err) {
       console.error("Failed to remove user", err);
@@ -108,15 +115,38 @@ function registerRoomEvents(io: Server, socket: Socket) {
         role: updatedRole,
       } satisfies SocketSession;
 
-      const users = await getAllUsers(session.code);
+      const room = await getAllUsers(session.code);
       io.to(session.code).emit("roomState", {
-        users: users.players,
-        hostId: users.hostId,
+        users: room.players,
+        hostId: room.hostId,
+        mode: room.mode,
+        themeWord: room.themeWord,
       });
     } catch (err) {
       console.error("Failed to change role", err);
       socket.emit("error", {
         message: err instanceof Error ? err.message : "Could not change role",
+      });
+    }
+  });
+
+  socket.on("changeMode", async (data) => {
+    try {
+      const session = requireSocketSession(socket);
+      const { mode } = ChangeModeSchema.parse(data);
+
+      await changeMode(session.userId, session.code, mode);
+      const room = await getAllUsers(session.code);
+      io.to(session.code).emit("roomState", {
+        users: room.players,
+        hostId: room.hostId,
+        mode: room.mode,
+        themeWord: room.themeWord,
+      });
+    } catch (err) {
+      console.error("Failed to change mode", err);
+      socket.emit("error", {
+        message: err instanceof Error ? err.message : "Could not change mode",
       });
     }
   });
@@ -223,10 +253,15 @@ function submissionComplete(code: string) {
   }
 }
 
-function startPicking(code: string, status: string) {
+function startPicking(
+  code: string,
+  status: string,
+  mode: Mode,
+  themeWord: string | null,
+) {
   try {
     const io = getIo();
-    io.to(code).emit("startPicking", { status });
+    io.to(code).emit("startPicking", { status, mode, themeWord });
   } catch (err) {
     console.error("Failed to emit startPicking event");
   }

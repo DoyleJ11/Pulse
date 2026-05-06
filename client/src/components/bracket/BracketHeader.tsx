@@ -21,7 +21,7 @@ export function BracketHeader({
 }: BracketHeaderProps) {
   const isSoftDisconnected = usePresence();
   return (
-    <div className="px-10 pt-4 pb-8">
+    <div className="px-10 pt-6 pb-8">
       <div className="max-w-[1600px] flex justify-between items-end gap-10 flex-wrap my-0 mx-auto">
         <div>
           <h1 className="text-[clamp(48px,6vw,88px)] m-0 uppercase font-black whitespace-nowrap">

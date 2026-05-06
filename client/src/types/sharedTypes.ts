@@ -2,6 +2,8 @@ export type Role = "player_a" | "player_b" | "judge" | "spectator" | null;
 
 export type Status = "lobby" | "picking" | "battling" | "complete";
 
+export type Mode = "favorites" | "theme";
+
 export type SongSelection = {
   deezerId: string;
   deezerRank: number;

@@ -9,11 +9,13 @@ import { type BracketSlot } from "../bracket/BracketView";
 import { formatDuration } from "../../utils/formatDuration";
 import { leaveCurrentRoom } from "../../utils/leaveRoom";
 import { PreviewAlbumArt } from "../ui/PreviewAlbumArt";
+import { ThemePill } from "../ui/ThemePill";
 
 export function PostGame() {
   const navigate = useNavigate();
   const lobbyCode = useRoomStore((state) => state.code);
   const players = useRoomStore((state) => state.players);
+  const themeWord = useRoomStore((state) => state.themeWord);
   const addError = useToastStore((state) => state.addError);
   const token = useTokenStore((state) => state.token);
 
@@ -68,7 +70,12 @@ export function PostGame() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center gap-10 p-10">
+    <div className="min-h-screen flex flex-col items-center justify-center gap-6 p-10">
+      {themeWord && (
+        <div className="mb-4">
+          <ThemePill themeWord={themeWord} />
+        </div>
+      )}
       {champion ? (
         <ChampionHero champion={champion} winnerName={winningPlayer?.name} />
       ) : (
@@ -105,9 +112,7 @@ function ChampionHero({
   const playerLabel = champion.role === "player_a" ? "PLAYER A" : "PLAYER B";
 
   return (
-    <div
-      className="relative w-full max-w-[640px] bg-[#FFD952] border-[3px] border-black rounded-3xl p-10 shadow-[10px_10px_0px_0px_#0A0A0A] flex flex-col items-center text-center gap-6"
-    >
+    <div className="relative w-full max-w-[640px] bg-[#FFD952] border-[3px] border-black rounded-3xl p-10 shadow-[10px_10px_0px_0px_#0A0A0A] flex flex-col items-center text-center gap-6">
       <div className="absolute -top-7 left-1/2 -translate-x-1/2 w-14 h-14 bg-black rounded-full border-[3px] border-black flex items-center justify-center">
         <Crown
           className="w-7 h-7 text-[#FFD952] fill-[#FFD952]"
@@ -161,9 +166,7 @@ function ChampionHero({
 function EarlyEndCard({ decidedCount }: { decidedCount: number }) {
   return (
     <div className="w-full max-w-[520px] bg-bg-card border-[3px] border-black rounded-3xl p-10 shadow-[8px_8px_0px_0px_#0A0A0A] flex flex-col items-center text-center gap-5">
-      <div
-        className="text-xs font-mono font-bold text-text-primary/50 uppercase tracking-[0.32em]"
-      >
+      <div className="text-xs font-mono font-bold text-text-primary/50 uppercase tracking-[0.32em]">
         No champion crowned
       </div>
       <h1
