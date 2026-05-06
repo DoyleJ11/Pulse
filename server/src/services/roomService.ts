@@ -8,7 +8,8 @@ import { RoomError } from "../utils/customErrors.js";
 import { type Song } from "../routes/rooms.js";
 import type { Payload } from "../utils/authUtils.js";
 import { seedSongs } from "./bracketService.js";
-
+import { pickRandomTheme } from "../data/themeWords.js";
+import type { RoomUpdateInput } from "../../generated/prisma/models/Room.js";
 const INCOMPLETE_ROOM_TTL_MS = 24 * 60 * 60 * 1000;
 const COMPLETE_ROOM_TTL_MS = 7 * 24 * 60 * 60 * 1000;
 
@@ -56,7 +57,11 @@ async function joinRoom(name: string, code: string) {
       throw new RoomError(`Cannot find room with code: ${code}`, code, "join");
     }
     if (isRoomStale(room)) {
-      throw new RoomError("This room has expired. Please create a new room.", code, "join");
+      throw new RoomError(
+        "This room has expired. Please create a new room.",
+        code,
+        "join",
+      );
     }
     if (room.status !== "lobby") {
       throw new RoomError(`Cannot join a room in progress.`, code, "join");
@@ -99,18 +104,34 @@ async function getRoomState(code: string, user: Payload) {
   });
 
   if (!room) {
-    throw new RoomError(`Cannot find room with id: ${user.roomId}`, code, "state");
+    throw new RoomError(
+      `Cannot find room with id: ${user.roomId}`,
+      code,
+      "state",
+    );
   }
   if (room.code !== code) {
-    throw new RoomError(`Provided code does not match user's room code: ${code}`, code, "state");
+    throw new RoomError(
+      `Provided code does not match user's room code: ${code}`,
+      code,
+      "state",
+    );
   }
   if (isRoomStale(room)) {
-    throw new RoomError("This room has expired. Please create a new room.", code, "state");
+    throw new RoomError(
+      "This room has expired. Please create a new room.",
+      code,
+      "state",
+    );
   }
 
   const currentUser = room.players.find((player) => player.id === user.userId);
   if (!currentUser) {
-    throw new RoomError("Your session no longer belongs to this room.", code, "state");
+    throw new RoomError(
+      "Your session no longer belongs to this room.",
+      code,
+      "state",
+    );
   }
 
   return {
@@ -123,6 +144,8 @@ async function getRoomState(code: string, user: Payload) {
       role: currentUser.role,
     },
     players: room.players,
+    mode: room.mode,
+    themeWord: room.themeWord,
     bracket: room.bracket,
   };
 }
@@ -134,27 +157,48 @@ async function setToPicking(code: string, user: Payload) {
       players: {
         omit: { roomId: true },
       },
-    }
+    },
   });
   if (!room) {
-    throw new RoomError(`Cannot find room with id: ${user.roomId}`, code, "lobby");
+    throw new RoomError(
+      `Cannot find room with id: ${user.roomId}`,
+      code,
+      "lobby",
+    );
   }
   if (room.status !== "lobby") {
-    throw new RoomError(`Must be in the lobby phase to start picking`, room.code, "lobby")
+    throw new RoomError(
+      `Must be in the lobby phase to start picking`,
+      room.code,
+      "lobby",
+    );
   }
   if (room.code !== code) {
-    throw new RoomError(`Provided code does not match user's room code: ${code}`, code, "lobby");
+    throw new RoomError(
+      `Provided code does not match user's room code: ${code}`,
+      code,
+      "lobby",
+    );
   }
   if (room.hostId !== user.userId) {
     throw new RoomError(`Room hostId does not match user's ID`, code, "lobby");
   }
   if (room.players.length < 3) {
-    throw new RoomError(`Must have at least two players & one judge to start picking`, room.code, "lobby")
+    throw new RoomError(
+      `Must have at least two players & one judge to start picking`,
+      room.code,
+      "lobby",
+    );
+  }
+
+  const data: RoomUpdateInput = { status: "picking" };
+  if (room.mode === "theme") {
+    data.themeWord = pickRandomTheme();
   }
 
   const updatedRoom = await prisma.room.update({
-    where: {code: code},
-    data: {status: "picking"}
+    where: { code: code },
+    data,
   });
 
   return updatedRoom;
@@ -166,32 +210,44 @@ async function submitPicks(songs: Song[], user: Payload, code: string) {
     where: { id: user?.roomId },
   });
   if (!room) {
-    throw new RoomError(`Cannot find room with id: ${user.roomId}`, code, "picking");
+    throw new RoomError(
+      `Cannot find room with id: ${user.roomId}`,
+      code,
+      "picking",
+    );
   }
   if (room.status !== "picking") {
-    throw new RoomError(`Cannot submit songs to a room outside of picking phase`, room.code, "picking");
+    throw new RoomError(
+      `Cannot submit songs to a room outside of picking phase`,
+      room.code,
+      "picking",
+    );
   }
   if (room.code !== code) {
-    throw new RoomError(`Provided code does not match user's room code: ${code}`, code, "picking");
+    throw new RoomError(
+      `Provided code does not match user's room code: ${code}`,
+      code,
+      "picking",
+    );
   }
 
   const player = await prisma.player.findUnique({
     where: { id: user.userId },
     include: {
       songs: true,
-    }
-  })
+    },
+  });
   if (!player) {
-    throw new Error(`Could not find player with id ${user.userId}`)
+    throw new Error(`Could not find player with id ${user.userId}`);
   }
   if (player.songs && player.songs.length !== 0) {
-    throw new Error('User already submitted songs.')
+    throw new Error("User already submitted songs.");
   }
   if (player.role !== "player_a" && player.role !== "player_b") {
-    throw new Error(`Only players can submit songs.`)
+    throw new Error(`Only players can submit songs.`);
   }
 
-  const createPromises = songs.map(song =>
+  const createPromises = songs.map((song) =>
     prisma.song.create({
       data: {
         playerId: user.userId,
@@ -204,11 +260,11 @@ async function submitPicks(songs: Song[], user: Payload, code: string) {
         duration: song.duration,
         seed: null,
       },
-    })
-  )
+    }),
+  );
 
   const newSongs = await prisma.$transaction(createPromises);
-  const bothPlayersReady = await checkPlayersSubmitted(user.roomId)
+  const bothPlayersReady = await checkPlayersSubmitted(user.roomId);
 
   if (bothPlayersReady) {
     await seedSongs(code);
@@ -216,8 +272,8 @@ async function submitPicks(songs: Song[], user: Payload, code: string) {
       data: {
         status: "battling",
       },
-      where: { id: user?.roomId }
-    })
+      where: { id: user?.roomId },
+    });
   }
 
   return { newSongs, bothPlayersReady };
@@ -226,29 +282,31 @@ async function submitPicks(songs: Song[], user: Payload, code: string) {
 async function checkPlayersSubmitted(roomId: string) {
   // Get all players in given room, including songs.
   const players = await prisma.player.findMany({
-    where: { roomId: roomId, OR: [{role: "player_a"}, {role: "player_b"}] },
-    include: {songs: true}
-  })
+    where: { roomId: roomId, OR: [{ role: "player_a" }, { role: "player_b" }] },
+    include: { songs: true },
+  });
 
   if (players.length === 0) {
-    throw new Error(`No players were found in room ${roomId}`)
+    throw new Error(`No players were found in room ${roomId}`);
   }
 
   if (players.length !== 2) {
-    throw new Error(`There must be 2 players before submitting.`)
+    throw new Error(`There must be 2 players before submitting.`);
   }
 
-  const allSubmitted = players.every((player) => player.songs.length > 0)
+  const allSubmitted = players.every((player) => player.songs.length > 0);
 
   return allSubmitted;
 }
-
 
 const VALID_ROLES = ["player_a", "player_b", "judge", "spectator"] as const;
 type ValidRole = (typeof VALID_ROLES)[number];
 
 async function changeRole(userId: string, code: string, newRole: unknown) {
-  if (typeof newRole !== "string" || !VALID_ROLES.includes(newRole as ValidRole)) {
+  if (
+    typeof newRole !== "string" ||
+    !VALID_ROLES.includes(newRole as ValidRole)
+  ) {
     throw new RoomError("Invalid role.", code, "changeRole");
   }
 
@@ -258,10 +316,18 @@ async function changeRole(userId: string, code: string, newRole: unknown) {
       include: { players: true },
     });
     if (!room) {
-      throw new RoomError(`Cannot find room with code: ${code}`, code, "changeRole");
+      throw new RoomError(
+        `Cannot find room with code: ${code}`,
+        code,
+        "changeRole",
+      );
     }
     if (room.status !== "lobby") {
-      throw new RoomError("Roles are locked once the game has started.", code, "changeRole");
+      throw new RoomError(
+        "Roles are locked once the game has started.",
+        code,
+        "changeRole",
+      );
     }
 
     const me = room.players.find((p) => p.id === userId);
@@ -287,6 +353,59 @@ async function changeRole(userId: string, code: string, newRole: unknown) {
   });
 }
 
+const VALID_MODES = ["favorites", "theme"] as const;
+type ValidMode = (typeof VALID_MODES)[number];
+async function changeMode(userId: string, code: string, newMode: unknown) {
+  if (
+    typeof newMode !== "string" ||
+    !VALID_MODES.includes(newMode as ValidMode)
+  ) {
+    throw new RoomError("Invalid mode.", code, "changeMode");
+  }
+
+  await prisma.$transaction(async (tx) => {
+    const room = await tx.room.findUnique({
+      where: { code: code },
+      include: { players: true },
+    });
+    if (!room) {
+      throw new RoomError(
+        `Cannot find room with code: ${code}`,
+        code,
+        "changeMode",
+      );
+    }
+    if (room.status !== "lobby") {
+      throw new RoomError(
+        "Mode locked once the game has started.",
+        code,
+        "changeMode",
+      );
+    }
+    const me = room.players.find((p) => p.id === userId);
+    if (!me) {
+      throw new RoomError("You're not in this room.", code, "changeMode");
+    }
+    if (me.id !== room.hostId) {
+      throw new RoomError(
+        "Only the host can change the mode",
+        code,
+        "changeMode",
+      );
+    }
+
+    const data: RoomUpdateInput = { mode: newMode };
+    if (newMode === "favorites") {
+      data.themeWord = null;
+    }
+
+    await tx.room.update({
+      where: { code: code },
+      data,
+    });
+  });
+}
+
 async function determineRole(room: Room, tx: PrismaTransactionalClient) {
   const players = await tx.player.findMany({
     where: { roomId: room.id },
@@ -306,7 +425,8 @@ function generateCode() {
 
 function isRoomStale(room: Pick<Room, "createdAt" | "status">) {
   const ageMs = Date.now() - room.createdAt.getTime();
-  const ttlMs = room.status === "complete" ? COMPLETE_ROOM_TTL_MS : INCOMPLETE_ROOM_TTL_MS;
+  const ttlMs =
+    room.status === "complete" ? COMPLETE_ROOM_TTL_MS : INCOMPLETE_ROOM_TTL_MS;
 
   return ageMs > ttlMs;
 }
@@ -351,4 +471,5 @@ export {
   changeRole,
   getRoomState,
   cleanupExpiredRooms,
+  changeMode,
 };

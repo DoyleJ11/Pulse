@@ -14,7 +14,12 @@ async function getAllUsers(code: string) {
     throw new RoomError(`Cannot find users in room: ${code}`, code, "getUsers");
   }
 
-  return { players: roomData.players, hostId: roomData.hostId };
+  return {
+    players: roomData.players,
+    hostId: roomData.hostId,
+    mode: roomData.mode,
+    themeWord: roomData.themeWord,
+  };
 }
 
 // kept for potential kick logic
