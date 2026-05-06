@@ -7,7 +7,7 @@ import { useEffect, useRef } from "react";
 import { socket } from "./utils/socket";
 import { useRoomStore } from "./stores/roomStore";
 import { useAuthStore } from "./stores/authStore";
-import type { Role } from "./types/sharedTypes";
+import type { Mode, Role } from "./types/sharedTypes";
 import { useTokenStore } from "./stores/tokenStore";
 import { BracketView } from "./components/bracket/BracketView";
 import { PostGame } from "./components/postgame/PostGame";
@@ -26,6 +26,8 @@ function App() {
   const setPlayers = useRoomStore((state) => state.setPlayers);
   const setHostId = useRoomStore((state) => state.setHostId);
   const setStatus = useRoomStore((state) => state.setStatus);
+  const setMode = useRoomStore((state) => state.setMode);
+  const setThemeWord = useRoomStore((state) => state.setThemeWord);
   const clearRoom = useRoomStore((state) => state.clearRoom);
   const token = useTokenStore((state) => state.token);
   const clearToken = useTokenStore((state) => state.clearToken);
@@ -73,6 +75,8 @@ function App() {
         setPlayers(roomState.players);
         setHostId(roomState.hostId);
         setStatus(roomState.status);
+        setMode(roomState.mode);
+        setThemeWord(roomState.themeWord);
         navigate(getRoomPath(roomState.code, roomState.status, location.pathname), {
           replace: true,
         });
@@ -102,6 +106,8 @@ function App() {
     setPlayers,
     setHostId,
     setStatus,
+    setMode,
+    setThemeWord,
     clearSession,
     clearRoom,
     clearToken,
@@ -149,12 +155,18 @@ function App() {
     const onRoomState = ({
       users,
       hostId,
+      mode,
+      themeWord,
     }: {
       users: Parameters<typeof setPlayers>[0];
       hostId: string;
+      mode: Mode;
+      themeWord: string | null;
     }) => {
       setPlayers(users);
       setHostId(hostId);
+      setMode(mode);
+      setThemeWord(themeWord);
       const me = users.find((u) => u.id === userId);
       if (me) setRole(me.role as Role);
     };
@@ -190,6 +202,8 @@ function App() {
     setPlayers,
     setHostId,
     setRole,
+    setMode,
+    setThemeWord,
     addToast,
     addError,
   ]);

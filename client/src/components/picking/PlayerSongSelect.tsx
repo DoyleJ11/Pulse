@@ -8,8 +8,13 @@ import { useToastStore } from "../../stores/toastStore";
 import { useEffect, useState, useRef } from "react";
 import { WaitingOverlay } from "./WaitingOverlay";
 import { socket } from "../../utils/socket";
+import { ThemePill } from "../ui/ThemePill";
 
-export function PlayerSongSelect() {
+export function PlayerSongSelect({
+  themeWord,
+}: {
+  themeWord: string | null;
+}) {
   const selectedSongs = useSongStore((state) => state.selectedSongs);
   const removeSong = useSongStore((state) => state.removeSong);
   const addSong = useSongStore((state) => state.addSong);
@@ -78,6 +83,11 @@ export function PlayerSongSelect() {
                 {roomCode || "------"}
               </span>
             </p>
+            {themeWord && (
+              <div className="mt-3">
+                <ThemePill themeWord={themeWord} />
+              </div>
+            )}
           </div>
 
           {/* Song counter pill */}
