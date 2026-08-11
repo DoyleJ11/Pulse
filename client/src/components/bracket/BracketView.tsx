@@ -117,14 +117,23 @@ export function BracketView() {
   }, [lobbyCode, token, addError]);
 
   useEffect(() => {
-    socket.on("bracketUpdated", ({ state, currentMatchup }) => {
+    const onBracketUpdated = ({
+      state,
+      currentMatchup,
+    }: {
+      state: (BracketSlot | null)[];
+      currentMatchup: number | null;
+    }) => {
       setBracketSlots(state);
       setBracket((prev) => ({ ...prev, currentMatchup }));
-    });
+    }
 
-    socket.on("bracketComplete", () => {
+    const onBracketComplete = () => {
       console.log("Bracket complete!");
-    });
+    }
+
+    socket.on("bracketUpdated", onBracketUpdated);
+    socket.on("bracketComplete", onBracketComplete);
 
     const onConnect = () => {
       getBracket();
@@ -142,8 +151,8 @@ export function BracketView() {
 
     return () => {
       clearTimeout(initialFetch);
-      socket.off("bracketUpdated");
-      socket.off("bracketComplete");
+      socket.off("bracketUpdated", onBracketUpdated);
+      socket.off("bracketComplete", onBracketComplete);
       socket.off("connect", onConnect);
       socket.off("roomEnded", onRoomEnded);
     };
