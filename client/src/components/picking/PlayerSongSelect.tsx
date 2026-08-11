@@ -41,15 +41,16 @@ export function PlayerSongSelect({
   }, [selectedSongs.length, isLockedIn]);
 
   useEffect(() => {
-    socket.on("roomState", () => {
+    const onRoomState = () => {
       socket.emit("pickUpdate", {
         songCount: pickRef.current.songCount,
         lockedIn: pickRef.current.isLockedIn,
       });
-    });
+    }
+    socket.on("roomState", onRoomState);
 
     return () => {
-      socket.off("roomState");
+      socket.off("roomState", onRoomState);
     };
   }, []);
 

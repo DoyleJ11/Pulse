@@ -29,7 +29,7 @@ export function JudgeSelectView({code, theme}: JudgeViewProps) {
     const [playerB, setPlayerB] = useState<Player>(placeholderPlayer);
 
     useEffect(() => {
-        socket.on("pickUpdate", ({songCount, userId, name, role, lockedIn}) => {
+        const onPickUpdate = ({songCount, userId, name, role, lockedIn}: Player) => {
             try {
                 if (role == "player_a") {
                     setPlayerA({songCount: songCount, userId: userId, name: name, role: role, lockedIn: lockedIn})
@@ -39,10 +39,12 @@ export function JudgeSelectView({code, theme}: JudgeViewProps) {
             } catch {
                 console.error("Failed to update player info on pickUpdate")
             }
-        })
+        }
+
+        socket.on("pickUpdate", onPickUpdate)
 
         return () => {
-            socket.off("pickUpdate")
+            socket.off("pickUpdate", onPickUpdate)
         }
     }, [])
 

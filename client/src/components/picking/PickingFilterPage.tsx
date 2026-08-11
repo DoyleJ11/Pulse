@@ -16,14 +16,16 @@ export function PickingFilterPage() {
 
     // On submissionComplete - clear songs, set lockIn false, navigate all users to bracket
     useEffect(() => {
-        socket.on("submissionComplete", () => {
+        const onSubmissionComplete = () => {
             clearSongs();
             setLockIn(false);
             navigate(`/lobby/${lobbyCode}/bracket`);
-        })
+        }
+
+        socket.on("submissionComplete", onSubmissionComplete)
 
         return () => {
-            socket.off("submissionComplete")
+            socket.off("submissionComplete", onSubmissionComplete)
         }
     }, [clearSongs, lobbyCode, navigate, setLockIn])
 
