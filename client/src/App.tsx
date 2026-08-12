@@ -118,10 +118,34 @@ function App() {
   ]);
 
   useEffect(() => {
+    const resyncRoomPhase = async () => {
+      if (!lobbyCode || !token) return;
+      try {
+        const roomState = await fetchRoomState(lobbyCode, token);
+        setStatus(roomState.status);
+        setPlayers(roomState.players);
+        setHostId(roomState.hostId);
+        setMode(roomState.mode);
+        setThemeWord(roomState.themeWord);
+        navigate(
+          getRoomPath(roomState.code, roomState.status, window.location.pathname),
+          { replace: true },
+        );
+      } catch {
+        // Transient failure: stay on the current screen. Session cleanup is
+        // the recovery flow's job, not the resync's.
+        addToast(
+          "Couldn't refresh the game state. Retrying on next reconnect.",
+          "warning",
+        );
+      }
+    };
+
     const onConnect = () => {
       if (wasDisconnectedRef.current) {
         addToast("Connection restored.", "success");
         wasDisconnectedRef.current = false;
+        void resyncRoomPhase();
       }
 
       if (lobbyCode && userId) {
@@ -202,10 +226,12 @@ function App() {
     setPlayers,
     setHostId,
     setRole,
+    setStatus,
     setMode,
     setThemeWord,
     addToast,
     addError,
+    navigate,
   ]);
 
   return (
