@@ -1,4 +1,4 @@
-import { Routes, Route, useLocation, useNavigate } from "react-router";
+import { Routes, Route, useNavigate } from "react-router";
 import { HomePage } from "./components/lobby/HomePage";
 import { LobbyCreation } from "./components/lobby/LobbyCreation";
 import { Lobby } from "./components/lobby/Lobby";
@@ -13,14 +13,13 @@ import { BracketView } from "./components/bracket/BracketView";
 import { PostGame } from "./components/postgame/PostGame";
 import { useToastStore } from "./stores/toastStore";
 import { useAudioStore } from "./stores/audioStore";
-import { fetchRoomState } from "./services/api";
+import { ApiError, fetchRoomState } from "./services/api";
 import { useSongStore } from "./stores/songStore";
 import type { Status } from "./types/sharedTypes";
 import { consumeIntentionalDisconnect } from "./utils/socketIntent";
 
 function App() {
   const navigate = useNavigate();
-  const location = useLocation();
   const lobbyCode = useRoomStore((state) => state.code);
   const setCode = useRoomStore((state) => state.setCode);
   const setPlayers = useRoomStore((state) => state.setPlayers);
@@ -42,6 +41,10 @@ function App() {
   const addError = useToastStore((state) => state.addError);
   const audioError = useAudioStore((state) => state.error);
   const wasDisconnectedRef = useRef(false);
+  // Recovery must run once per (code, token) pair — not on every effect
+  // re-run (navigate's identity changes with the location, so the dep array
+  // alone can't guarantee that).
+  const recoveryKeyRef = useRef<string | null>(null);
 
   useEffect(() => {
     if (audioError) {
@@ -52,18 +55,22 @@ function App() {
   useEffect(() => {
     if (!lobbyCode) return;
 
-    if (!token) {
-      clearSession();
-      clearRoom();
-      clearSongs();
-      return;
-    }
+    // No credentials (fresh tab or browser restart): skip recovery entirely.
+    // Clearing here would write into localStorage shared with a tab that may
+    // still be mid-game.
+    if (!token) return;
+
+    const recoveryKey = `${lobbyCode}:${token}`;
+    if (recoveryKeyRef.current === recoveryKey) return;
+    recoveryKeyRef.current = recoveryKey;
 
     let cancelled = false;
+    let attemptFinished = false;
 
     (async () => {
       try {
         const roomState = await fetchRoomState(lobbyCode, token);
+        attemptFinished = true;
         if (cancelled) return;
 
         setCode(roomState.code);
@@ -77,26 +84,43 @@ function App() {
         setStatus(roomState.status);
         setMode(roomState.mode);
         setThemeWord(roomState.themeWord);
-        navigate(getRoomPath(roomState.code, roomState.status, location.pathname), {
-          replace: true,
-        });
+        navigate(
+          getRoomPath(roomState.code, roomState.status, window.location.pathname),
+          { replace: true },
+        );
       } catch (error) {
+        attemptFinished = true;
         if (cancelled) return;
 
-        clearSession();
-        clearRoom();
-        clearToken();
-        clearSongs();
-        addError(
-          error,
-          "Your saved room session could not be restored. Please join again.",
-        );
-        navigate("/", { replace: true });
+        const sessionInvalid =
+          error instanceof ApiError && [401, 403, 404].includes(error.status);
+
+        if (sessionInvalid) {
+          clearSession();
+          clearRoom();
+          clearToken();
+          clearSongs();
+          addError(
+            error,
+            "Your saved room session could not be restored. Please join again.",
+          );
+          navigate("/", { replace: true });
+        } else {
+          // Transient (network, 5xx, schema drift): stay put — the reconnect
+          // resync and a manual refresh are the retry paths.
+          addToast(
+            "Couldn't restore the game state. Refresh to try again.",
+            "warning",
+          );
+        }
       }
     })();
 
     return () => {
       cancelled = true;
+      // If this run was torn down before its fetch resolved (StrictMode
+      // double-mount), release the guard so the replacement run recovers.
+      if (!attemptFinished) recoveryKeyRef.current = null;
     };
   }, [
     lobbyCode,
@@ -113,7 +137,7 @@ function App() {
     clearToken,
     clearSongs,
     addError,
-    location.pathname,
+    addToast,
     navigate,
   ]);
 

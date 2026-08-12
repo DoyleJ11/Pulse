@@ -182,6 +182,16 @@ async function fetchRoomState(code: string, token: string) {
   return RoomStateSchema.parse(response);
 }
 
+class ApiError extends Error {
+  status: number;
+
+  constructor(message: string, status: number) {
+    super(message);
+    this.name = "ApiError";
+    this.status = status;
+  }
+}
+
 async function fetchHelper(
   url: string,
   method: string,
@@ -209,7 +219,7 @@ async function fetchHelper(
 
   if (!response.ok) {
     const errorBody = await response.json().catch(() => null);
-    throw new Error(getApiErrorMessage(errorBody, response.status));
+    throw new ApiError(getApiErrorMessage(errorBody, response.status), response.status);
   }
 
   const data = await response.json();
@@ -243,6 +253,7 @@ function getApiErrorMessage(errorBody: unknown, status: number) {
 }
 
 export {
+  ApiError,
   createRoom,
   joinRoom,
   searchSong,
