@@ -80,6 +80,10 @@ ALLOWED_ORIGINS=https://pulse.vercel.app
 NODE_ENV=production
 ```
 
+Railway automatically injects `RAILWAY_ENVIRONMENT_ID` and the request's
+`X-Real-IP` header. Pulse uses those values for per-client rate limiting; do
+not add or copy a Railway environment ID into the service variables manually.
+
 Vercel client env:
 
 ```text

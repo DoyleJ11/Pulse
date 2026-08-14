@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 import { Search } from "lucide-react";
 import { SearchResult } from "./SearchResult";
 import { useToastStore } from "../../stores/toastStore";
+import { useTokenStore } from "../../stores/tokenStore";
 
 interface SearchContainerProps {
   onAddSong: (song: SongSelection) => void;
@@ -18,6 +19,7 @@ export function SearchContainer({
 }: SearchContainerProps) {
   const [results, setResults] = useState<DeezerSong[]>([]);
   const [query, setQuery] = useState("");
+  const token = useTokenStore((state) => state.token);
   const addError = useToastStore((state) => state.addError);
   const debouncedQuery = useDebounce(query, 300);
 
@@ -27,7 +29,10 @@ export function SearchContainer({
     let cancelled = false;
     (async () => {
       try {
-        const searchResults: DeezerSong[] = await searchSong(debouncedQuery);
+        const searchResults: DeezerSong[] = await searchSong(
+          debouncedQuery,
+          token,
+        );
         if (!cancelled) setResults(searchResults);
       } catch (error) {
         if (!cancelled) {
@@ -40,7 +45,7 @@ export function SearchContainer({
     return () => {
       cancelled = true;
     };
-  }, [debouncedQuery, addError]);
+  }, [debouncedQuery, token, addError]);
 
   const handleQueryChange = (value: string) => {
     setQuery(value);

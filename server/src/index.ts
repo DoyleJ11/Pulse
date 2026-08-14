@@ -41,8 +41,6 @@ app.use("/api/rooms", roomRouter);
 app.use("/api/rooms", bracketRouter);
 app.use("/api/search", searchRouter);
 
-app.use("/api/search", searchRouter);
-
 app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
   if (err instanceof CustomError) {
     res.status(err.status).json({

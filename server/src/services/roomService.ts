@@ -5,7 +5,7 @@ import crypto from "crypto";
 import { generateToken } from "../utils/authUtils.js";
 import type { Room } from "../../generated/prisma/client.js";
 import { RoomError } from "../utils/customErrors.js";
-import { type Song } from "../routes/rooms.js";
+import type { Song } from "../schemas/songSubmission.js";
 import type { Payload } from "../utils/authUtils.js";
 import { seedSongs } from "./bracketService.js";
 import { pickRandomTheme } from "../data/themeWords.js";

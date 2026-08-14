@@ -7,7 +7,12 @@ import {
 } from "../services/roomService.js";
 import express from "express";
 import { z } from "zod";
+import { SubmissionSchema } from "../schemas/songSubmission.js";
 import { authMiddleware } from "../middleware/auth.js";
+import {
+  createRoomLimiter,
+  joinRoomLimiter,
+} from "../middleware/rateLimits.js";
 import { asyncHandler } from "../utils/errorHandler.js";
 import { submissionComplete, startPicking } from "../sockets/roomEvents.js";
 
@@ -21,23 +26,9 @@ const NameSchema = z
 
 const CodeSchema = z.string().trim().min(6, "Code must be 6 characters").max(6);
 
-const SongSchema = z.object({
-  deezerId: z.string(),
-  deezerRank: z.number(),
-  title: z.string(),
-  artist: z.string(),
-  albumArt: z.string(),
-  duration: z.number(),
-  preview: z.string(),
-});
-export type Song = z.infer<typeof SongSchema>;
-
-const SubmissionSchema = z
-  .array(SongSchema)
-  .length(8, { message: "Must submit exactly 8 songs." });
-
 router.post(
   "/",
+  createRoomLimiter,
   asyncHandler(async (req, res) => {
     const name = NameSchema.parse(req.body.name);
     const { room, host, token } = await createRoom(name);
@@ -55,6 +46,7 @@ router.post(
 
 router.post(
   "/:code/join",
+  joinRoomLimiter,
   asyncHandler(async (req, res) => {
     const name = NameSchema.parse(req.body.name);
     const code = CodeSchema.parse(req.params.code);

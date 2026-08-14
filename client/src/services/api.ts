@@ -87,8 +87,13 @@ const DeezerSchema = z.object({
 });
 export type DeezerSong = z.infer<typeof DeezerSchema>;
 
-async function searchSong(query: string) {
-  const response = await fetchHelper(`/api/search?q=${query}`, "GET");
+async function searchSong(query: string, token: string) {
+  const response = await fetchHelper(
+    `/api/search?q=${query}`,
+    "GET",
+    undefined,
+    token,
+  );
 
   const data = DeezerSchema.array().parse(await response);
   return data;
