@@ -180,78 +180,46 @@ async function fetchBracket(code: string, user?: Payload) {
   return bracket;
 }
 
-async function isValidPick(
-  code: string,
-  matchupIndex: number,
-  winnerSongId: string,
-): Promise<void> {
-  const room = await prisma.room.findUnique({
-    where: { code: code },
-    include: { bracket: true },
-  });
-  if (!room) {
-    throw new RoomError(`Cannot find room`, code, "battling");
-  }
-  if (!room.bracket)
-    throw new RoomError(`Cannot find bracket`, code, "battling");
-  if (!room.bracket.state)
-    throw new RoomError(`Cannot find bracket state`, code, "battling");
-  if (room.status !== "battling")
-    throw new RoomError(`Incorrect room status`, code, "battling");
-
-  if (matchupIndex !== room.bracket.currentMatchup) {
-    throw new Error("Current matchup does not match provided matchup");
-  }
-
-  const children = getChildren(matchupIndex);
-  const bracket = room.bracket.state as (BracketSlot | null)[];
-  const left = bracket[children[0]];
-  const right = bracket[children[1]];
-
-  if (!left || !right) throw new Error("Children cannot be null");
-
-  if (
-    left &&
-    right &&
-    winnerSongId !== left.songId &&
-    winnerSongId !== right.songId
-  ) {
-    throw new Error("Winner does not match either matchup children");
-  }
-}
-
-async function updateBracket(
+async function resolveMatchup(
   code: string,
   matchupIndex: number,
   winnerSongId: string,
 ): Promise<{ state: (BracketSlot | null)[]; currentMatchup: number | null }> {
-  const room = await prisma.room.findUnique({
-    where: { code: code },
-    include: { bracket: true },
-  });
-  if (!room) {
-    throw new RoomError(`Cannot find room`, code, "battling");
-  }
-  if (!room.bracket) {
-    throw new RoomError(`Cannot find bracket`, code, "battling");
-  }
-  if (!room.bracket.state) {
-    throw new RoomError(`Cannot find bracket state`, code, "battling");
-  }
-
-  const bracket = room.bracket.state as (BracketSlot | null)[];
-  let nextMatchup: number | null = null;
-
-  const updatedBracket = applyWinner(bracket, matchupIndex, winnerSongId);
-  nextMatchup = findNextMatchup(updatedBracket);
-
-  await prisma.$transaction(async (tx) => {
-    if (nextMatchup === null) {
-      await tx.room.update({
-        where: { id: room.id },
-        data: { status: "complete" },
-      });
+  return await prisma.$transaction(async (tx) => {
+    const roomId = await lockRoomForUpdate(tx, code);
+    const room = await tx.room.findUnique({
+      where: { id: roomId },
+      include: { bracket: true },
+    });
+    if (!room) {
+      throw new RoomError(`Cannot find room`, code, "battling");
     }
+    if (room.status !== "battling") {
+      throw new RoomError(`Incorrect room status`, code, "battling");
+    }
+    if (!room.bracket) {
+      throw new RoomError(`Cannot find bracket`, code, "battling");
+    }
+    if (!room.bracket.state) {
+      throw new RoomError(`Cannot find bracket state`, code, "battling");
+    }
+    if (matchupIndex !== room.bracket.currentMatchup) {
+      throw new Error("Current matchup does not match provided matchup");
+    }
+
+    const bracket = room.bracket.state as (BracketSlot | null)[];
+    const children = getChildren(matchupIndex);
+    const left = bracket[children[0]];
+    const right = bracket[children[1]];
+    if (!left || !right) {
+      throw new Error("Children cannot be null");
+    }
+    if (winnerSongId !== left.songId && winnerSongId !== right.songId) {
+      throw new Error("Winner does not match either matchup children");
+    }
+
+    const updatedBracket = applyWinner(bracket, matchupIndex, winnerSongId);
+    const nextMatchup = findNextMatchup(updatedBracket);
 
     await tx.bracket.update({
       where: { roomId: room.id },
@@ -260,9 +228,16 @@ async function updateBracket(
         currentMatchup: nextMatchup,
       },
     });
-  });
 
-  return { state: updatedBracket, currentMatchup: nextMatchup };
+    if (nextMatchup === null) {
+      await tx.room.update({
+        where: { id: room.id },
+        data: { status: "complete" },
+      });
+    }
+
+    return { state: updatedBracket, currentMatchup: nextMatchup };
+  });
 }
 
 function findNextMatchup(bracket: (BracketSlot | null)[]): number | null {
@@ -289,36 +264,43 @@ function findNextMatchup(bracket: (BracketSlot | null)[]): number | null {
 }
 
 async function endGame(code: string) {
-  const room = await prisma.room.findUnique({
-    where: { code: code },
-  });
-  if (!room) {
-    throw new RoomError(`Cannot find room`, code, "battling");
-  }
+  return await prisma.$transaction(async (tx) => {
+    const roomId = await lockRoomForUpdate(tx, code);
+    const room = await tx.room.findUnique({
+      where: { id: roomId },
+      include: { bracket: true },
+    });
+    if (!room) {
+      throw new RoomError(`Cannot find room`, code, "battling");
+    }
+    if (room.status !== "battling") {
+      throw new RoomError(`Incorrect room status`, code, "battling");
+    }
+    if (!room.bracket) {
+      throw new RoomError(`Cannot find bracket`, code, "battling");
+    }
+    if (!room.bracket.state) {
+      throw new RoomError(`Cannot find bracket state`, code, "battling");
+    }
 
-  await prisma.room.update({
-    where: { id: room.id },
-    data: { status: "complete" },
+    await tx.room.update({
+      where: { id: room.id },
+      data: { status: "complete" },
+    });
+
+    return room.bracket.state as (BracketSlot | null)[];
   });
 }
 
-async function getBracketState(code: string) {
-  const room = await prisma.room.findUnique({
-    where: { code: code },
-    include: { bracket: true },
-  });
-  if (!room) {
+async function lockRoomForUpdate(tx: PrismaTransactionalClient, code: string) {
+  const lockedRooms = await tx.$queryRaw<Array<{ id: string }>>`
+    SELECT "id" FROM "Room" WHERE "code" = ${code} FOR UPDATE
+  `;
+  const roomId = lockedRooms[0]?.id;
+  if (!roomId) {
     throw new RoomError(`Cannot find room`, code, "battling");
   }
-  if (!room.bracket) {
-    throw new RoomError(`Cannot find bracket`, code, "battling");
-  }
-  if (!room.bracket.state) {
-    throw new RoomError(`Cannot find bracket state`, code, "battling");
-  }
-
-  const bracketState = room.bracket.state as (BracketSlot | null)[];
-  return bracketState;
+  return roomId;
 }
 
 function applyWinner(
@@ -350,10 +332,8 @@ function getChildren(parentIndex: number): [number, number] {
 export {
   seedSongs,
   fetchBracket,
-  isValidPick,
-  updateBracket,
+  resolveMatchup,
   findNextMatchup,
   applyWinner,
   endGame,
-  getBracketState,
 };

@@ -11,12 +11,7 @@ import {
   SessionExpiredError,
   verifyToken,
 } from "../utils/authUtils.js";
-import {
-  isValidPick,
-  updateBracket,
-  endGame,
-  getBracketState,
-} from "../services/bracketService.js";
+import { resolveMatchup, endGame } from "../services/bracketService.js";
 import { changeMode, changeRole } from "../services/roomService.js";
 
 const CodeSchema = z
@@ -187,9 +182,7 @@ function registerRoomEvents(io: Server, socket: Socket) {
       const { matchupIndex, winnerSongId } = JudgePickSchema.parse(data);
       const role = await getUserRoleById(session.userId);
       if (role === "judge" && session.role === "judge") {
-        await isValidPick(session.code, matchupIndex, winnerSongId);
-
-        const { state, currentMatchup } = await updateBracket(
+        const { state, currentMatchup } = await resolveMatchup(
           session.code,
           matchupIndex,
           winnerSongId,
@@ -215,8 +208,7 @@ function registerRoomEvents(io: Server, socket: Socket) {
         throw new Error("Spectators cannot end game");
       }
 
-      await endGame(session.code);
-      const state = await getBracketState(session.code);
+      const state = await endGame(session.code);
       io.to(session.code).emit("roomEnded", { state });
     } catch (err) {
       emitSocketError(socket, err, "Failed to end game");
