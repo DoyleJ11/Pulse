@@ -34,6 +34,10 @@ export function PlayerSongSelect({
       isLockedIn: isLockedIn,
     };
 
+    // Do not queue pick state before App has restored the authenticated
+    // socket session. The roomState response will publish the latest state.
+    if (!socket.connected) return;
+
     socket.emit("pickUpdate", {
       songCount: selectedSongs.length,
       lockedIn: isLockedIn,
