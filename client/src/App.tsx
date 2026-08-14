@@ -16,6 +16,7 @@ import { useAudioStore } from "./stores/audioStore";
 import { ApiError, fetchRoomState } from "./services/api";
 import { useSongStore } from "./stores/songStore";
 import type { Status } from "./types/sharedTypes";
+import { leaveCurrentRoom } from "./utils/leaveRoom";
 import { consumeIntentionalDisconnect } from "./utils/socketIntent";
 
 function App() {
@@ -200,6 +201,15 @@ function App() {
       addError(error, "Something went wrong with the live room connection.");
     };
 
+    const onSessionExpired = ({ message }: { message?: string }) => {
+      leaveCurrentRoom();
+      navigate("/", { replace: true });
+      addToast(
+        message ?? "Your room session has expired. Please join again.",
+        "error",
+      );
+    };
+
     const onRoomState = ({
       users,
       hostId,
@@ -223,6 +233,7 @@ function App() {
     socket.on("disconnect", onDisconnect);
     socket.on("connect_error", onConnectError);
     socket.on("error", onSocketError);
+    socket.on("sessionExpired", onSessionExpired);
     socket.on("roomState", onRoomState);
 
     if (lobbyCode && userId) {
@@ -239,6 +250,7 @@ function App() {
       socket.off("disconnect", onDisconnect);
       socket.off("connect_error", onConnectError);
       socket.off("error", onSocketError);
+      socket.off("sessionExpired", onSessionExpired);
       socket.off("roomState", onRoomState);
     };
   }, [

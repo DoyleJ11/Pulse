@@ -7,7 +7,10 @@ import {
   getUserSessionById,
 } from "../utils/dbUtils.js";
 import { getIo } from "../utils/socket.js";
-import { verifyToken } from "../utils/authUtils.js";
+import {
+  SessionExpiredError,
+  verifyToken,
+} from "../utils/authUtils.js";
 import {
   isValidPick,
   updateBracket,
@@ -81,6 +84,12 @@ function registerRoomEvents(io: Server, socket: Socket) {
       });
     } catch (err) {
       console.error("Failed to join room", err);
+
+      if (err instanceof SessionExpiredError) {
+        socket.emit("sessionExpired", { message: err.message });
+        return;
+      }
+
       emitSocketError(socket, err, "Could not join room");
     }
   });
