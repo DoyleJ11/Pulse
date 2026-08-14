@@ -151,57 +151,82 @@ async function getRoomState(code: string, user: Payload) {
 }
 
 async function setToPicking(code: string, user: Payload) {
-  const room = await prisma.room.findUnique({
-    where: { id: user?.roomId },
-    include: {
-      players: {
-        omit: { roomId: true },
+  return await prisma.$transaction(async (tx) => {
+    const lockedRooms = await tx.$queryRaw<Array<{ id: string }>>`
+      SELECT "id" FROM "Room" WHERE "id" = ${user.roomId} FOR UPDATE
+    `;
+    if (lockedRooms.length === 0) {
+      throw new RoomError(
+        `Cannot find room with id: ${user.roomId}`,
+        code,
+        "lobby",
+      );
+    }
+
+    const room = await tx.room.findUnique({
+      where: { id: user.roomId },
+      include: {
+        players: {
+          omit: { roomId: true },
+        },
       },
-    },
+    });
+    if (!room) {
+      throw new RoomError(
+        `Cannot find room with id: ${user.roomId}`,
+        code,
+        "lobby",
+      );
+    }
+    if (room.status !== "lobby") {
+      throw new RoomError(
+        `Must be in the lobby phase to start picking`,
+        room.code,
+        "lobby",
+      );
+    }
+    if (room.code !== code) {
+      throw new RoomError(
+        `Provided code does not match user's room code: ${code}`,
+        code,
+        "lobby",
+      );
+    }
+    if (room.hostId !== user.userId) {
+      throw new RoomError(
+        `Room hostId does not match user's ID`,
+        code,
+        "lobby",
+      );
+    }
+
+    const playerACount = room.players.filter(
+      (player) => player.role === "player_a",
+    ).length;
+    const playerBCount = room.players.filter(
+      (player) => player.role === "player_b",
+    ).length;
+    const judgeCount = room.players.filter(
+      (player) => player.role === "judge",
+    ).length;
+    if (playerACount !== 1 || playerBCount !== 1 || judgeCount < 1) {
+      throw new RoomError(
+        `A game requires one Player A, one Player B, and at least one judge.`,
+        room.code,
+        "lobby",
+      );
+    }
+
+    const data: RoomUpdateInput = { status: "picking" };
+    if (room.mode === "theme") {
+      data.themeWord = pickRandomTheme();
+    }
+
+    return await tx.room.update({
+      where: { id: room.id },
+      data,
+    });
   });
-  if (!room) {
-    throw new RoomError(
-      `Cannot find room with id: ${user.roomId}`,
-      code,
-      "lobby",
-    );
-  }
-  if (room.status !== "lobby") {
-    throw new RoomError(
-      `Must be in the lobby phase to start picking`,
-      room.code,
-      "lobby",
-    );
-  }
-  if (room.code !== code) {
-    throw new RoomError(
-      `Provided code does not match user's room code: ${code}`,
-      code,
-      "lobby",
-    );
-  }
-  if (room.hostId !== user.userId) {
-    throw new RoomError(`Room hostId does not match user's ID`, code, "lobby");
-  }
-  if (room.players.length < 3) {
-    throw new RoomError(
-      `Must have at least two players & one judge to start picking`,
-      room.code,
-      "lobby",
-    );
-  }
-
-  const data: RoomUpdateInput = { status: "picking" };
-  if (room.mode === "theme") {
-    data.themeWord = pickRandomTheme();
-  }
-
-  const updatedRoom = await prisma.room.update({
-    where: { code: code },
-    data,
-  });
-
-  return updatedRoom;
 }
 
 async function submitPicks(songs: Song[], user: Payload, code: string) {
@@ -345,6 +370,10 @@ async function changeRole(userId: string, code: string, newRole: unknown) {
   }
 
   await prisma.$transaction(async (tx) => {
+    await tx.$queryRaw<Array<{ id: string }>>`
+      SELECT "id" FROM "Room" WHERE "code" = ${code} FOR UPDATE
+    `;
+
     const room = await tx.room.findUnique({
       where: { code: code },
       include: { players: true },
