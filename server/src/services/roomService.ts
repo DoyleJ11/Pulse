@@ -206,82 +206,116 @@ async function setToPicking(code: string, user: Payload) {
 
 async function submitPicks(songs: Song[], user: Payload, code: string) {
   // Zod already verified the shape & size of array for us.
-  const room = await prisma.room.findUnique({
-    where: { id: user?.roomId },
-  });
-  if (!room) {
-    throw new RoomError(
-      `Cannot find room with id: ${user.roomId}`,
-      code,
-      "picking",
-    );
-  }
-  if (room.status !== "picking") {
-    throw new RoomError(
-      `Cannot submit songs to a room outside of picking phase`,
-      room.code,
-      "picking",
-    );
-  }
-  if (room.code !== code) {
-    throw new RoomError(
-      `Provided code does not match user's room code: ${code}`,
-      code,
-      "picking",
-    );
-  }
+  return await prisma.$transaction(async (tx) => {
+    // PostgreSQL row locks serialize both players' submissions for this room.
+    // A concurrent retry cannot inspect or mutate the room until the first
+    // transaction has either committed or rolled back.
+    const lockedRooms = await tx.$queryRaw<Array<{ id: string }>>`
+      SELECT "id" FROM "Room" WHERE "id" = ${user.roomId} FOR UPDATE
+    `;
+    if (lockedRooms.length === 0) {
+      throw new RoomError(
+        `Cannot find room with id: ${user.roomId}`,
+        code,
+        "picking",
+      );
+    }
 
-  const player = await prisma.player.findUnique({
-    where: { id: user.userId },
-    include: {
-      songs: true,
-    },
-  });
-  if (!player) {
-    throw new Error(`Could not find player with id ${user.userId}`);
-  }
-  if (player.songs && player.songs.length !== 0) {
-    throw new Error("User already submitted songs.");
-  }
-  if (player.role !== "player_a" && player.role !== "player_b") {
-    throw new Error(`Only players can submit songs.`);
-  }
-
-  const createPromises = songs.map((song) =>
-    prisma.song.create({
-      data: {
-        playerId: user.userId,
-        deezerId: song.deezerId,
-        deezerRank: song.deezerRank,
-        title: song.title,
-        artist: song.artist,
-        albumArt: song.albumArt,
-        previewUrl: song.preview,
-        duration: song.duration,
-        seed: null,
-      },
-    }),
-  );
-
-  const newSongs = await prisma.$transaction(createPromises);
-  const bothPlayersReady = await checkPlayersSubmitted(user.roomId);
-
-  if (bothPlayersReady) {
-    await seedSongs(code);
-    await prisma.room.update({
-      data: {
-        status: "battling",
-      },
-      where: { id: user?.roomId },
+    const room = await tx.room.findUnique({
+      where: { id: user.roomId },
     });
-  }
+    if (!room) {
+      throw new RoomError(
+        `Cannot find room with id: ${user.roomId}`,
+        code,
+        "picking",
+      );
+    }
+    if (room.code !== code) {
+      throw new RoomError(
+        `Provided code does not match user's room code: ${code}`,
+        code,
+        "picking",
+      );
+    }
 
-  return { newSongs, bothPlayersReady };
+    const player = await tx.player.findUnique({
+      where: { id: user.userId },
+      include: { songs: true },
+    });
+    if (!player || player.roomId !== room.id) {
+      throw new Error(`Could not find player with id ${user.userId} in room`);
+    }
+    if (player.role !== "player_a" && player.role !== "player_b") {
+      throw new Error(`Only players can submit songs.`);
+    }
+
+    // Treat a complete previous submission as a successful retry. Returning
+    // readiness for a battling room lets the route repeat the socket event if
+    // the original HTTP response or event was lost.
+    if (player.songs.length === 8) {
+      if (room.status === "picking" || room.status === "battling") {
+        return {
+          newSongs: player.songs,
+          bothPlayersReady: room.status === "battling",
+        };
+      }
+      throw new RoomError(
+        `Cannot submit songs to a room outside of picking phase`,
+        room.code,
+        "picking",
+      );
+    }
+    if (player.songs.length !== 0) {
+      throw new Error(
+        `Player has an incomplete submission (${player.songs.length}/8 songs).`,
+      );
+    }
+    if (room.status !== "picking") {
+      throw new RoomError(
+        `Cannot submit songs to a room outside of picking phase`,
+        room.code,
+        "picking",
+      );
+    }
+
+    const newSongs = await Promise.all(
+      songs.map((song) =>
+        tx.song.create({
+          data: {
+            playerId: user.userId,
+            deezerId: song.deezerId,
+            deezerRank: song.deezerRank,
+            title: song.title,
+            artist: song.artist,
+            albumArt: song.albumArt,
+            previewUrl: song.preview,
+            duration: song.duration,
+            seed: null,
+          },
+        }),
+      ),
+    );
+
+    const bothPlayersReady = await checkPlayersSubmitted(room.id, tx);
+    if (bothPlayersReady) {
+      await seedSongs(code, room.id, tx);
+      await tx.room.update({
+        data: { status: "battling" },
+        where: { id: room.id },
+      });
+    }
+
+    return { newSongs, bothPlayersReady };
+  });
 }
 
-async function checkPlayersSubmitted(roomId: string) {
+async function checkPlayersSubmitted(
+  roomId: string,
+  tx: PrismaTransactionalClient,
+) {
   // Get all players in given room, including songs.
-  const players = await prisma.player.findMany({
+  const players = await tx.player.findMany({
     where: { roomId: roomId, OR: [{ role: "player_a" }, { role: "player_b" }] },
     include: { songs: true },
   });
@@ -294,7 +328,7 @@ async function checkPlayersSubmitted(roomId: string) {
     throw new Error(`There must be 2 players before submitting.`);
   }
 
-  const allSubmitted = players.every((player) => player.songs.length > 0);
+  const allSubmitted = players.every((player) => player.songs.length === 8);
 
   return allSubmitted;
 }

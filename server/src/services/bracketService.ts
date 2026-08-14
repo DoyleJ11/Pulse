@@ -3,6 +3,7 @@ import { Prisma } from "../../generated/prisma/client.js";
 import { RoomError } from "../utils/customErrors.js";
 import type { Player, Song } from "../../generated/prisma/client.js";
 import type { Payload } from "../utils/authUtils.js";
+import type { PrismaTransactionalClient } from "../utils/prisma.js";
 
 // Round 1:      indicies 15-30
 // Round 2:      indicies 7-14
@@ -23,18 +24,14 @@ interface BracketSlot {
   seed: number;
 }
 
-async function seedSongs(code: string) {
-  const room = await prisma.room.findUnique({
-    where: { code: code },
-  });
-
-  if (!room) {
-    throw new RoomError(`Cannot find room`, code, "battling");
-  }
-
-  const playerA = await prisma.player.findFirst({
+async function seedSongs(
+  code: string,
+  roomId: string,
+  tx: PrismaTransactionalClient,
+) {
+  const playerA = await tx.player.findFirst({
     where: {
-      AND: { roomId: room.id, role: "player_a" },
+      AND: { roomId, role: "player_a" },
     },
     include: {
       songs: true,
@@ -44,9 +41,9 @@ async function seedSongs(code: string) {
     throw new Error(`Could not find playerA`);
   }
 
-  const playerB = await prisma.player.findFirst({
+  const playerB = await tx.player.findFirst({
     where: {
-      AND: { roomId: room.id, role: "player_b" },
+      AND: { roomId, role: "player_b" },
     },
     include: {
       songs: true,
@@ -55,14 +52,17 @@ async function seedSongs(code: string) {
   if (!playerB) {
     throw new Error(`Could not find playerB`);
   }
+  if (playerA.songs.length !== 8 || playerB.songs.length !== 8) {
+    throw new Error(`Both players must submit exactly 8 songs before seeding.`);
+  }
 
-  const playerASongs = playerA.songs;
+  const playerASongs = [...playerA.songs];
   playerASongs.sort((a, b) => b.deezerRank - a.deezerRank);
   playerASongs.forEach((song, index) => {
     song.seed = index + 1;
   });
 
-  const playerBSongs = playerB.songs;
+  const playerBSongs = [...playerB.songs];
   playerBSongs.sort((a, b) => b.deezerRank - a.deezerRank);
   playerBSongs.forEach((song, index) => {
     song.seed = index + 1;
@@ -74,7 +74,8 @@ async function seedSongs(code: string) {
     playerBSongs,
     playerA,
     playerB,
-    room.id,
+    roomId,
+    tx,
   );
 }
 
@@ -84,6 +85,7 @@ async function generateBracket(
   playerA: Player,
   playerB: Player,
   roomId: string,
+  tx: PrismaTransactionalClient,
 ) {
   // Get both player's songs from DB (now with seeded values)
   // Create 31 slot array filled with null values
@@ -92,77 +94,73 @@ async function generateBracket(
   // Items inserted in order of seed: A1-B8, A2-B7, A3-B6, A4-B5, A5-B4, A6-B3, A7-B2, A8-B1
   // Once all songs inserted, create bracket record in DB and store array as JSON on the state property of the bracket record.
 
-  const result = await prisma.$transaction(async (tx) => {
-    const bracket: (null | BracketSlot)[] = Array(31).fill(null);
-    playerASongs.forEach((song, index) => {
-      let oddIndex = 15 + index * 2;
-      if (!song.seed) {
-        song.seed = 0;
-      }
+  const bracket: (null | BracketSlot)[] = Array(31).fill(null);
+  playerASongs.forEach((song, index) => {
+    const oddIndex = 15 + index * 2;
+    if (!song.seed) {
+      song.seed = 0;
+    }
 
-      const bracketItem: BracketSlot = {
-        songId: song.id,
-        deezerId: song.deezerId,
-        title: song.title,
-        artist: song.artist,
-        albumArt: song.albumArt,
-        previewUrl: song.previewUrl,
-        duration: song.duration,
-        submittedBy: song.playerId,
-        role: playerA.role,
-        seed: song.seed,
-      };
-      bracket[oddIndex] = bracketItem;
-    });
-
-    playerBSongs.forEach((song, index) => {
-      const size = playerBSongs.length - 1;
-      let reverseIndex = size - index;
-      let evenIndex = 16 + reverseIndex * 2;
-      if (!song.seed) {
-        song.seed = 0;
-      }
-
-      const bracketItem: BracketSlot = {
-        songId: song.id,
-        deezerId: song.deezerId,
-        title: song.title,
-        artist: song.artist,
-        albumArt: song.albumArt,
-        previewUrl: song.previewUrl,
-        duration: song.duration,
-        submittedBy: song.playerId,
-        role: song.playerId === playerA.id ? playerA.role : playerB.role,
-        seed: song.seed,
-      };
-      bracket[evenIndex] = bracketItem;
-    });
-
-    const playerAPromises = playerASongs.map((song) =>
-      tx.song.update({
-        where: { id: song.id },
-        data: { seed: song.seed },
-      }),
-    );
-
-    const playerBPromises = playerBSongs.map((song) =>
-      tx.song.update({
-        where: { id: song.id },
-        data: { seed: song.seed },
-      }),
-    );
-    await Promise.all([...playerAPromises, ...playerBPromises]);
-
-    return await tx.bracket.create({
-      data: {
-        roomId: roomId,
-        state: bracket as Prisma.InputJsonValue,
-        currentMatchup: 7,
-      },
-    });
+    const bracketItem: BracketSlot = {
+      songId: song.id,
+      deezerId: song.deezerId,
+      title: song.title,
+      artist: song.artist,
+      albumArt: song.albumArt,
+      previewUrl: song.previewUrl,
+      duration: song.duration,
+      submittedBy: song.playerId,
+      role: playerA.role,
+      seed: song.seed,
+    };
+    bracket[oddIndex] = bracketItem;
   });
 
-  return result;
+  playerBSongs.forEach((song, index) => {
+    const size = playerBSongs.length - 1;
+    const reverseIndex = size - index;
+    const evenIndex = 16 + reverseIndex * 2;
+    if (!song.seed) {
+      song.seed = 0;
+    }
+
+    const bracketItem: BracketSlot = {
+      songId: song.id,
+      deezerId: song.deezerId,
+      title: song.title,
+      artist: song.artist,
+      albumArt: song.albumArt,
+      previewUrl: song.previewUrl,
+      duration: song.duration,
+      submittedBy: song.playerId,
+      role: song.playerId === playerA.id ? playerA.role : playerB.role,
+      seed: song.seed,
+    };
+    bracket[evenIndex] = bracketItem;
+  });
+
+  const playerAPromises = playerASongs.map((song) =>
+    tx.song.update({
+      where: { id: song.id },
+      data: { seed: song.seed },
+    }),
+  );
+
+  const playerBPromises = playerBSongs.map((song) =>
+    tx.song.update({
+      where: { id: song.id },
+      data: { seed: song.seed },
+    }),
+  );
+  await Promise.all([...playerAPromises, ...playerBPromises]);
+
+  return await tx.bracket.create({
+    data: {
+      roomId: roomId,
+      state: bracket as Prisma.InputJsonValue,
+      currentMatchup: 7,
+    },
+  });
 }
 
 async function fetchBracket(code: string, user?: Payload) {
